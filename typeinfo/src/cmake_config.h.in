@@ -1,0 +1,3 @@
+// cmake configured options and settings
+#define TYPEINFO_VERSION_MAJOR @TYPEINFO_VERSION_MAJOR@
+#define TYPEINFO_VERSION_MINOR @TYPEINFO_VERSION_MINOR@

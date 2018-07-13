@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- A XML configuration file -->
+
+<dds version = 5.0.0>
+    <qos_library name="ddsTest">
+
+        <qos_profile name="PlantQoS">
+            <participant_factory_qos>
+                <entity_factory>
+                    <autoenable_created_entities>false</autoenable_created_entities>
+                </entity_factory>
+            <participant_factory_qos>
+
+            <datawriter_qos name="LogDataWriter">
+                <reliability>
+                    <kind>BEST_EFFORT_RELIABILITY_QOS</kind>
+                </reliability>
+            </datawriter_qos>
+
+            <datawriter_qos name="ControlInfoWriter">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datawriter_qos>
+
+            <datareader_qos name="ControlProbeReader">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datareader_qos>
+
+            <datareader_qos name="ControlSettingReader">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datareader_qos>
+
+        </qos_profile>
+
+        <qos_profile name="MonitorQoS">
+
+            <participant_factory_qos>
+                <entity_factory>
+                    <autoenable_created_entities>false</autoenable_created_entities>
+                </entity_factory>
+            <participant_factory_qos>
+
+            <datareader_qos name="LogDataReader">
+                <reliability>
+                    <kind>BEST_EFFORT_RELIABILITY_QOS</kind>
+                </reliability>
+            </datareader_qos>
+
+            <datareader_qos name="ControlInfoReader">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datareader_qos>
+
+            <datawriter_qos name="ControlProbeWriter">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datawriter_qos>
+
+            <datawriter_qos name="ControlSettingWriter">
+                <reliability>
+                    <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+            </datawriter_qos>
+
+        </qos_profile>
+
+    </qos_library>
+</dds>
