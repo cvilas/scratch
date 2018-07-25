@@ -42,12 +42,11 @@ public:
   FsmContext& getContext();
   std::string name();
 private:
-  bool is_init_;
   FsmContext& context_;
   std::string name_;
   std::vector<std::shared_ptr<Fsm>> states_;
   std::vector<FsmTransition> transitions_;
-  std::vector<std::shared_ptr<Fsm>>::const_iterator current_state_it_;
+  std::shared_ptr<Fsm> current_state_;
   std::vector<std::future<void>> pending_futs_;
 };
 

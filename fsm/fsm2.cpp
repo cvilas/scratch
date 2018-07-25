@@ -21,7 +21,7 @@ void FsmContext::trigger(const FsmSignal& signal)
 }
 
 //======================================================================================================================
-Fsm::Fsm(FsmContext& ctx, const std::string& name) : is_init_(false), context_(ctx), name_(name)
+Fsm::Fsm(FsmContext& ctx, const std::string& name) : context_(ctx), name_(name)
 //======================================================================================================================
 {
 }
@@ -55,6 +55,7 @@ void Fsm::addTransitionRule(const std::string& state, const FsmSignal& signal, c
   /// \todo
   /// - 3 params of same type => potential for error
   /// - check old and new states are present
+  /// - check this transition is unique (ie.. for this state and signal, no other transitions exist)
   transitions_.push_back({state, new_state, signal});
 }
 
@@ -63,31 +64,23 @@ void Fsm::initialise(const std::string& initial_state)
 //----------------------------------------------------------------------------------------------------------------------
 {
   const auto it_end = states_.end();
-  if(is_init_)
+  if(current_state_ != nullptr)
   {
-    (*current_state_it_)->onExit();
+    current_state_->onExit();
   }
   auto it = std::find_if(states_.begin(), states_.end(), [&initial_state](const std::shared_ptr<Fsm>& state){return state->name_ == initial_state; });
   if(it == it_end)
   {
     throw std::runtime_error("No such state");
   }
-  current_state_it_ = it;
-  is_init_ = true;
+  current_state_ = *it;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 std::shared_ptr<Fsm> Fsm::getCurrentState()
 //----------------------------------------------------------------------------------------------------------------------
 {
-  /// \todo
-  /// - what happens to current_state_it_ when new states are added. does it get invalidated?
-
-  if(current_state_it_ == states_.end())
-  {
-    return nullptr;
-  }
-  return *current_state_it_;
+  return current_state_;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -95,9 +88,9 @@ bool Fsm::trigger(const std::string& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
   // pass signal down the current state and see if it gets consumed there
-  if((*current_state_it_)->is_init_)
+  if(current_state_ != nullptr)
   {
-    if((*current_state_it_)->trigger(signal))
+    if(current_state_->trigger(signal))
     {
       return true;
     }
@@ -106,7 +99,7 @@ bool Fsm::trigger(const std::string& signal)
   // find a valid transition
   const auto it = std::find_if(transitions_.begin(), transitions_.end(), [this, signal](const FsmTransition& t)
   {
-    return (t.current_state == (*current_state_it_)->name_) && (t.signal == signal);
+    return (t.current_state == current_state_->name_) && (t.signal == signal);
   });
 
   if(it == transitions_.end())
@@ -115,19 +108,22 @@ bool Fsm::trigger(const std::string& signal)
   }
 
   // find next state
-  auto next_state = std::find_if(states_.begin(), states_.end(), [it](const std::shared_ptr<Fsm>& fsm)
+  auto next_state_it = std::find_if(states_.begin(), states_.end(), [it](const std::shared_ptr<Fsm>& fsm)
   {
     return fsm->name_ == (*it).new_state;
   });
-  if(next_state == states_.end())
+  if(next_state_it == states_.end())
   {
     return false;
   }
 
   // exit current state and bring up new state
-  (*current_state_it_)->onExit();
-  current_state_it_ = next_state;
-  auto fut = std::async(std::launch::async, [this](){(*current_state_it_)->onEntry();});
+  if(current_state_ != nullptr)
+  {
+    current_state_->onExit();
+  }
+  current_state_ = *next_state_it;
+  auto fut = std::async(std::launch::async, [this](){current_state_->onEntry();});
   pending_futs_.emplace_back(std::move(fut));
 
   /// \todo - pending_futs_ needs to be cleared
