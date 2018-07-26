@@ -30,7 +30,7 @@ public:
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    getFsm().trigger("maintain_speed");
+    getFsm().raiseSignal("maintain_speed");
     std::cout << "[" << getName() << "::onEntry] exited\n";
   }
   void onExit() final
@@ -49,7 +49,7 @@ public:
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    getFsm().trigger("has_shutdown");
+    getFsm().raiseSignal("has_shutdown");
     std::cout << "[" << getName() << "::onEntry] exited\n";
   }
   void onExit() final
@@ -68,7 +68,7 @@ public:
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    getFsm().trigger("off");
+    getFsm().raiseSignal("off");
     std::cout << "[" << getName() << "::onEntry] exited\n";
   }
   void onExit() final
@@ -101,24 +101,24 @@ public:
   ~MotorController()
   {
     std::cout << "State while exiting: " << getCurrentState() << "\n" << std::flush;
-    controller_fsm_.trigger("off");
-    std::cout << "waiting for pending triggers to flush..\n" << std::flush;
-    while(controller_fsm_.isTriggerPending())
+    controller_fsm_.raiseSignal("off");
+    std::cout << "Waiting for pending triggers to flush..\n" << std::flush;
+    while(controller_fsm_.isTransitionPending())
     {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     std::cout << "No pending triggers\n" << std::flush;
-    std::cout << "waiting for \"idle\" state..\n" << std::flush;
+    std::cout << "Waiting for \"idle\" state..\n" << std::flush;
     while(getCurrentState() != "idle")
     {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    std::cout << "\"idle\" state reached\n" << std::flush;
+    std::cout << "State \"idle\" reached\n" << std::flush;
   }
 
   void trigger(FsmSignal signal)
   {
-    controller_fsm_.trigger(signal);
+    controller_fsm_.raiseSignal(signal);
   }
 
   std::string getCurrentState() const

@@ -44,8 +44,8 @@ public:
   void addState(std::shared_ptr<FsmState> state);
   void addTransitionRule(const std::string& from_state, const FsmSignal& signal, const std::string& to_state);
   void initialise(const std::string& initial_state);
-  void trigger(const FsmSignal& signal);
-  bool isTriggerPending() const;
+  void raiseSignal(const FsmSignal& signal);
+  bool isTransitionPending() const;
   const std::shared_ptr<FsmState>& getCurrentState() const;
 private:
   bool stateExists(const std::string& name);

@@ -96,7 +96,7 @@ const std::shared_ptr<FsmState>& Fsm::getCurrentState() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::trigger(const std::string& signal)
+void Fsm::raiseSignal(const std::string& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
   std::lock_guard<std::mutex> lk(trigger_guard_);
@@ -105,7 +105,7 @@ void Fsm::trigger(const std::string& signal)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool Fsm::isTriggerPending() const
+bool Fsm::isTransitionPending() const
 //----------------------------------------------------------------------------------------------------------------------
 {
   std::lock_guard<std::mutex> lk(trigger_guard_);
@@ -116,6 +116,11 @@ bool Fsm::isTriggerPending() const
 void Fsm::switchState(const FsmSignal& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
+  if(current_state_ == nullptr)
+  {
+    throw std::runtime_error("FSM not initialised");
+  }
+
   // find a valid transition
   const auto it = std::find_if(transitions_.begin(), transitions_.end(), [this, signal](const FsmTransition& t)
   {
@@ -135,10 +140,7 @@ void Fsm::switchState(const FsmSignal& signal)
   });
 
   // exit current state and bring up new state
-  if(current_state_ != nullptr)
-  {
-    current_state_->onExit();
-  }
+  current_state_->onExit();
   current_state_ = *next_state_it;
   current_state_->onEntry();
 }
