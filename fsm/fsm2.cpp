@@ -1,62 +1,71 @@
 #include "fsm2.h"
 
-//======================================================================================================================
-FsmContext::FsmContext() : top_level_fsm_(nullptr)
-  //======================================================================================================================
-{
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void FsmContext::setTopLevelFsm(Fsm* top)
-//----------------------------------------------------------------------------------------------------------------------
-{
-  top_level_fsm_ = top;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void FsmContext::trigger(const FsmSignal& signal)
-//----------------------------------------------------------------------------------------------------------------------
-{
-  top_level_fsm_->trigger(signal);
-}
+#include <sstream>
 
 //======================================================================================================================
-Fsm::Fsm(FsmContext& ctx, const std::string& name) : context_(ctx), name_(name)
+Fsm::Fsm() : exit_trigger_processor_(false)
 //======================================================================================================================
 {
+  trigger_processor_result_ = std::async(std::launch::async, [this](){this->triggerProcessingLoop();});
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Fsm::~Fsm()
 //----------------------------------------------------------------------------------------------------------------------
-{}
+{
+  exit_trigger_processor_ = true;
+  trigger_condition_.notify_all();
+  if (trigger_processor_result_.valid())
+  {
+   trigger_processor_result_.wait();
+  }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::onEntry()
-//----------------------------------------------------------------------------------------------------------------------
-{}
-
-//----------------------------------------------------------------------------------------------------------------------
-void Fsm::onExit()
-//----------------------------------------------------------------------------------------------------------------------
-{}
-
-//----------------------------------------------------------------------------------------------------------------------
-void Fsm::addState(std::shared_ptr<Fsm> state)
+void Fsm::addState(std::shared_ptr<FsmState> state)
 //----------------------------------------------------------------------------------------------------------------------
 {
   states_.emplace_back(std::move(state));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::addTransitionRule(const std::string& state, const FsmSignal& signal, const std::string& new_state)
+bool Fsm::stateExists(const std::string& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  /// \todo
-  /// - 3 params of same type => potential for error
-  /// - check old and new states are present
-  /// - check this transition is unique (ie.. for this state and signal, no other transitions exist)
-  transitions_.push_back({state, new_state, signal});
+  return states_.end() != std::find_if(states_.begin(), states_.end(), [&name](const std::shared_ptr<FsmState>& s){return s->getName() == name; });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool Fsm::transitionExists(const std::string& state_name, const FsmSignal& signal)
+//----------------------------------------------------------------------------------------------------------------------
+{
+  return transitions_.end() != std::find_if(transitions_.begin(), transitions_.end(), [&state_name, &signal](const FsmTransition& t)
+  {return ((t.current_state == state_name) && (t.signal == signal)); });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void Fsm::addTransitionRule(const std::string& from_state, const FsmSignal& signal, const std::string& to_state)
+//----------------------------------------------------------------------------------------------------------------------
+{
+  if(!stateExists(from_state))
+  {
+    std::stringstream str;
+    str << "'From' state " << from_state << " does not exit";
+    throw std::runtime_error(str.str());
+  }
+  if(!stateExists(to_state))
+  {
+    std::stringstream str;
+    str << "'To' state " << to_state << " does not exit";
+    throw std::runtime_error(str.str());
+  }
+  if(transitionExists(from_state, signal))
+  {
+    std::stringstream str;
+    str << "Transition from " << from_state << " already exists for " << signal;
+    throw std::runtime_error(str.str());
+  }
+  transitions_.push_back({from_state, to_state, signal});
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -68,54 +77,62 @@ void Fsm::initialise(const std::string& initial_state)
   {
     current_state_->onExit();
   }
-  auto it = std::find_if(states_.begin(), states_.end(), [&initial_state](const std::shared_ptr<Fsm>& state){return state->name_ == initial_state; });
+  auto it = std::find_if(states_.begin(), states_.end(), [&initial_state](const std::shared_ptr<FsmState>& state){return state->getName() == initial_state; });
   if(it == it_end)
   {
-    throw std::runtime_error("No such state");
+    std::stringstream str;
+    str << "State " << initial_state << " does not exist";
+    throw std::runtime_error(str.str());
   }
   current_state_ = *it;
+  current_state_->onEntry();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-std::shared_ptr<Fsm> Fsm::getCurrentState()
+const std::shared_ptr<FsmState>& Fsm::getCurrentState() const
 //----------------------------------------------------------------------------------------------------------------------
 {
   return current_state_;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool Fsm::trigger(const std::string& signal)
+void Fsm::trigger(const std::string& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  // pass signal down the current state and see if it gets consumed there
-  if(current_state_ != nullptr)
-  {
-    if(current_state_->trigger(signal))
-    {
-      return true;
-    }
-  }
+  std::lock_guard<std::mutex> lk(trigger_guard_);
+  trigger_queue_.push_back(signal);
+  trigger_condition_.notify_one();
+}
 
+//----------------------------------------------------------------------------------------------------------------------
+bool Fsm::isTriggerPending() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+  std::lock_guard<std::mutex> lk(trigger_guard_);
+  return !trigger_queue_.empty();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void Fsm::switchState(const FsmSignal& signal)
+//----------------------------------------------------------------------------------------------------------------------
+{
   // find a valid transition
   const auto it = std::find_if(transitions_.begin(), transitions_.end(), [this, signal](const FsmTransition& t)
   {
-    return (t.current_state == current_state_->name_) && (t.signal == signal);
+    return (t.current_state == current_state_->getName()) && (t.signal == signal);
   });
 
   if(it == transitions_.end())
   {
-    return false;
+    //std::cout << "No transition from " << current_state_->getName() << " for signal " << signal << ". Ignored.\n";
+    return;
   }
 
   // find next state
-  auto next_state_it = std::find_if(states_.begin(), states_.end(), [it](const std::shared_ptr<Fsm>& fsm)
+  auto next_state_it = std::find_if(states_.begin(), states_.end(), [it](const std::shared_ptr<FsmState>& state)
   {
-    return fsm->name_ == (*it).new_state;
+    return state->getName() == (*it).new_state;
   });
-  if(next_state_it == states_.end())
-  {
-    return false;
-  }
 
   // exit current state and bring up new state
   if(current_state_ != nullptr)
@@ -123,24 +140,31 @@ bool Fsm::trigger(const std::string& signal)
     current_state_->onExit();
   }
   current_state_ = *next_state_it;
-  auto fut = std::async(std::launch::async, [this](){current_state_->onEntry();});
-  pending_futs_.emplace_back(std::move(fut));
-
-  /// \todo - pending_futs_ needs to be cleared
-
-  return true;
+  current_state_->onEntry();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-FsmContext& Fsm::getContext()
+void Fsm::triggerProcessingLoop()
 //----------------------------------------------------------------------------------------------------------------------
 {
-  return context_;
-}
+  while(1)
+  {
+    std::unique_lock<std::mutex> lk(trigger_guard_);
+    trigger_condition_.wait(lk);
 
-//----------------------------------------------------------------------------------------------------------------------
-std::string Fsm::name()
-//----------------------------------------------------------------------------------------------------------------------
-{
-  return name_;
+    while(!trigger_queue_.empty())
+    {
+      const auto trigger = trigger_queue_.front();
+      trigger_queue_.pop_front();
+
+      lk.unlock();
+      switchState(trigger);
+      lk.lock();
+    }
+
+    if(exit_trigger_processor_)
+    {
+      return;
+    }
+  }
 }
