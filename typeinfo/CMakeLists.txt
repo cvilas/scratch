@@ -1,4 +1,5 @@
 project(TypeInfo)
+set(CMAKE_CXX_STANDARD 17) # Turn on C++17 compile flags
 
 # requires c++11
 cmake_minimum_required(VERSION 2.8)
