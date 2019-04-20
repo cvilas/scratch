@@ -6,6 +6,8 @@
 #include <QList>
 #include <QDebug>
 
+#include <cmath>
+
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
