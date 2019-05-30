@@ -1,6 +1,8 @@
 #include <iostream>
 #include <type_traits>
 
+#include <robohive/base/version.h>
+
 // a type
 struct Key
 {
@@ -33,6 +35,7 @@ public:
 // usage
 int main()
 {
+    std::cout << hive::getHiveVersion() << std::endl;
   std::cout << std::boolalpha;
   std::cout << has_getKey_method<int>::value << std::endl;
   std::cout << has_getKey_method<MyType>::value << std::endl;
