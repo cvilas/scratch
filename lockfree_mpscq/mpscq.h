@@ -50,9 +50,10 @@ bool mpscq<T,N>::push(T&& obj)
   }
 
   // increment the head, which gives us 'exclusive' access to that element until is_reabable_ flag is set
-  auto head = head_.fetch_add(1, std::memory_order_acquire);
-  buffer_[head % N] = std::move(obj);
-  is_readable_[head % N].store(true, std::memory_order_release);
+  const auto head = head_.fetch_add(1, std::memory_order_acquire) % N;
+  buffer_[head] = std::move(obj);
+  assert(is_readable_[head] == false);
+  is_readable_[head].store(true, std::memory_order_release);
   return true;
 
 }
@@ -69,6 +70,7 @@ std::optional<T> mpscq<T,N>::pop()
     return {};
   }
 
+  assert(is_readable_[tail_]);
   auto ret = std::move(buffer_[tail_]);
   is_readable_[tail_].store(false, std::memory_order_release);
 
