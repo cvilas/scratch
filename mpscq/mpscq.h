@@ -17,7 +17,7 @@ public:
   mpscq();
   bool tryPush(T &&obj);
   std::optional<T> tryPop();
-  size_t count();
+  size_t count() const;
 
 private:
   std::atomic<size_t> count_{0};
@@ -83,7 +83,7 @@ std::optional<T> mpscq<T, capacity_>::tryPop()
 
 /// \return The number of items in queue
 template <typename T, size_t capacity_>
-size_t mpscq<T, capacity_>::count()
+size_t mpscq<T, capacity_>::count() const
 {
   return count_.load(std::memory_order_relaxed);
 }

@@ -11,7 +11,7 @@ struct HeavyObject
   uint32_t value[128];
 };
 
-constexpr size_t Q_LEN = 1000;
+constexpr size_t Q_LEN = 100;
 static mpscq<HeavyObject, Q_LEN> s_queue;
 static std::atomic_bool s_exit = false;
 static std::atomic_uint s_value = 0;
@@ -30,7 +30,7 @@ void producer()
     std::this_thread::sleep_for(std::chrono::microseconds(1));
     std::this_thread::yield();
     if (pushed) {
-      std::cout << std::hex << std::this_thread::get_id() << " produced - value: " << s_value << "\n";
+      //std::cout << std::hex << std::this_thread::get_id() << " produced - value: " << s_value << "\n";
       ++s_value;
     }
   }
