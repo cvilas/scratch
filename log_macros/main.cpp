@@ -5,6 +5,7 @@
 // - https://github.com/SergiusTheBest/plog
 
 #include <iostream>
+#include <functional>
 
 struct None
 {
@@ -28,10 +29,11 @@ constexpr LogData< std::pair<Begin&&, const char*> > operator<<(LogData<Begin>&&
     return {{ std::forward<Begin>(begin.list), value }};
 }
 
-typedef std::ostream& (*PfnManipulator)(std::ostream&);
+using PfnManipulator = std::function<std::ostream&(std::ostream&)>;
+//typedef std::ostream& (*PfnManipulator)(std::ostream&);
 
 template<typename Begin>
-constexpr LogData< std::pair<Begin&&, PfnManipulator> > operator<<(LogData<Begin>&& begin, PfnManipulator value) noexcept
+constexpr LogData< std::pair<Begin&&, PfnManipulator> > operator<<(LogData<Begin>&& begin, PfnManipulator&& value) noexcept
 {
     return {{ std::forward<Begin>(begin.list), value }};
 }
@@ -51,7 +53,7 @@ void Log(const char* file, int line, LogData<List>&& data)
     std::cout << std::endl;
 }
 
-inline void output(std::ostream& os, None)
+inline void output(std::ostream&, None)
 { }
 
 #define LOG(msg) (Log(__FILE__, __LINE__, LogData<None>() << msg))
