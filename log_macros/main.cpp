@@ -33,7 +33,7 @@ using PfnManipulator = std::function<std::ostream&(std::ostream&)>;
 //typedef std::ostream& (*PfnManipulator)(std::ostream&);
 
 template<typename Begin>
-constexpr LogData<std::pair<Begin&&, PfnManipulator>> operator<< (LogData<Begin>&& begin, PfnManipulator&& value) noexcept
+constexpr LogData< std::pair<Begin&&, PfnManipulator> > operator<<(LogData<Begin>&& begin, PfnManipulator&& value) noexcept
 {
     return {{ std::forward<Begin>(begin.list), value }};
 }
@@ -55,6 +55,9 @@ void Log(const char* file, int line, LogData<List>&& data)
     printList(std::cout, std::move(data.list));
     std::cout << std::endl;
 }
+
+inline void output(std::ostream&, None)
+{ }
 
 #define LOG(msg) (Log(__FILE__, __LINE__, LogData<None>() << msg))
 
