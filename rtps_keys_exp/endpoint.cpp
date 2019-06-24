@@ -39,7 +39,9 @@ Endpoint::Endpoint(int domain, const std::string& name) : participant_(nullptr),
     const auto& num_samples_per_instance = MyTopicAttributes::DEFAULT_NUM_SAMPLES_PER_INSTANCE;
     const auto num_samples = num_instances * num_samples_per_instance;
 
-    topic_attr_.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
+    test::MyTopicAttributes::HAS_KEY
+        ? topic_attr_.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
+        : topic_attr_.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
     topic_attr_.topicDataType = test::MyTopicAttributes::DATA_TYPE;
     topic_attr_.topicName = test::MyTopicAttributes::TOPIC;
 

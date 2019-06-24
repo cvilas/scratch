@@ -10,6 +10,7 @@ struct MyTopicAttributes
 {
   static constexpr char TOPIC[] = "my_topic";
   static constexpr char DATA_TYPE[] = "MyDataType";
+  static constexpr bool HAS_KEY = true;
   static constexpr eprosima::fastrtps::ReliabilityQosPolicyKind RELIABILITY_QOS = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
   static constexpr eprosima::fastrtps::DurabilityQosPolicyKind_t DURABILITY_QOS = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
   static constexpr int32_t DEFAULT_NUM_INSTANCES = 2;

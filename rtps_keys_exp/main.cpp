@@ -5,6 +5,8 @@
 #include <fastrtps/rtps/RTPSDomain.h>
 
 #include <iostream>
+#include <atomic>
+#include <csignal>
 
 //=====================================================================================================================
 void reader_callback(uint8_t* const data, uint32_t dataLength)
@@ -17,17 +19,33 @@ void reader_callback(uint8_t* const data, uint32_t dataLength)
   std::cout << *pvalue << "\n";
 }
 
+static std::atomic_bool exit_flag = false;
+
+//=====================================================================================================================
+void onSignal(int signo)
+//=====================================================================================================================
+{
+  std::cout << strsignal(signo) << " received.\n";
+  exit_flag = true;
+}
+
 //=====================================================================================================================
 int main(int argc, char** argv)
 //=====================================================================================================================
 {
-  bool exit_flag = false;
-  std::thread writer_thread([&exit_flag]()
+  signal(SIGINT, onSignal);
+  signal(SIGTERM, onSignal);
+
+  std::thread writer_thread([]()
   {
     test::Writer writer;
     test::MyType data;
     while(!exit_flag)
     {
+      data.x++;
+      data.y++;
+      data.z++;
+      data.id = 22;
       eprosima::fastcdr::FastBuffer buffer;
       eprosima::fastcdr::FastCdr serdes(buffer);
       serdes << data;
@@ -36,7 +54,7 @@ int main(int argc, char** argv)
     }
   });
 
-  std::thread reader_thread([&exit_flag]()
+  std::thread reader_thread([]()
   {
     test::Reader reader(&reader_callback);
     while(!exit_flag)
