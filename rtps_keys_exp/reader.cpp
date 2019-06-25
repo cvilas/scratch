@@ -25,6 +25,7 @@ void Reader::Listener::onReaderMatched(eprosima::fastrtps::rtps::RTPSReader* pRe
 void Reader::Listener::onNewCacheChangeAdded(eprosima::fastrtps::rtps::RTPSReader* pReader, const eprosima::fastrtps::rtps::CacheChange_t* const pChange)
 //---------------------------------------------------------------------------------------------------------------------
 {
+  std::cout << __FUNCTION__ << " ih: " << (int)(pChange->instanceHandle.value[0]) << "\n";
   if (callback_)
   {
     callback_(pChange->serializedPayload.data, pChange->serializedPayload.length);
@@ -36,6 +37,11 @@ void Reader::Listener::onNewCacheChangeAdded(eprosima::fastrtps::rtps::RTPSReade
 Reader::Reader(const ReaderCallback& fn) : Endpoint(0, "READER_NODE"), reader_listener_(fn), reader_(nullptr)
 //=====================================================================================================================
 {
+  /// Change 1: Set endpoint topic kind
+  test::MyTopicAttributes::HAS_KEY
+      ? reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
+      : reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
+
   // set reliability qos
   switch (MyTopicAttributes::RELIABILITY_QOS)
   {

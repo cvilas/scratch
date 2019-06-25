@@ -14,6 +14,8 @@ namespace test
 Endpoint::Endpoint(int domain, const std::string& name) : participant_(nullptr), participant_listener_(*this)
 //=====================================================================================================================
 {
+  eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Kind::Info);
+
     // set participant attributes we care about
     eprosima::fastrtps::rtps::RTPSParticipantAttributes part_attr_;
     part_attr_.setName(name.c_str());

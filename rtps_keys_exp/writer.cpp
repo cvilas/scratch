@@ -29,6 +29,10 @@ void Writer::Listener::onWriterMatched(eprosima::fastrtps::rtps::RTPSWriter* wri
 Writer::Writer() : Endpoint(0, "WRITER_NODE"), writer_(nullptr)
 //=====================================================================================================================
 {
+  test::MyTopicAttributes::HAS_KEY
+      ? writer_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
+      : writer_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
+
   // set reliability qos
   switch (MyTopicAttributes::RELIABILITY_QOS)
   {
@@ -118,7 +122,9 @@ void Writer::write(const uint8_t* pData, uint32_t dataLength)
 
   const std::function<uint32_t()> dataSizeFunc = [dataLength]() -> uint32_t { return dataLength * sizeof(uint8_t); };
 
-  eprosima::fastrtps::rtps::CacheChange_t* pchange = writer_->new_change(dataSizeFunc, eprosima::fastrtps::rtps::ChangeKind_t::ALIVE);
+  eprosima::fastrtps::rtps::InstanceHandle_t h;
+  h.value[0] = 0x01;
+  eprosima::fastrtps::rtps::CacheChange_t* pchange = writer_->new_change(dataSizeFunc, eprosima::fastrtps::rtps::ChangeKind_t::ALIVE, h);
 
   // In the case history is full, remove some old changes
   /// \todo Review this. Implement a policy for what to do when history is full
@@ -129,7 +135,7 @@ void Writer::write(const uint8_t* pData, uint32_t dataLength)
     /// \note: I am assuming this removes the oldest changes, not the latest ones
     writer_->remove_older_changes(max_changes_to_remove);
     ++num_removed;
-    pchange = writer_->new_change(dataSizeFunc, eprosima::fastrtps::rtps::ChangeKind_t::ALIVE);
+    pchange = writer_->new_change(dataSizeFunc, eprosima::fastrtps::rtps::ChangeKind_t::ALIVE, h);
   }
 
   // copy data into buffer and send
