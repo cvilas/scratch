@@ -37,6 +37,10 @@ void Reader::Listener::onNewCacheChangeAdded(eprosima::fastrtps::rtps::RTPSReade
 Reader::Reader(const ReaderCallback& fn) : Endpoint(0, "READER_NODE"), reader_listener_(fn), reader_(nullptr)
 //=====================================================================================================================
 {
+  /// \todo
+  /// - Set all fields in reader_attr_, reader_qos_, history_, topic_attr_
+  /// - Set all fields in writer_attr_, writer_qos_, history_
+
   /// Change 1: Set endpoint topic kind
   test::MyTopicAttributes::HAS_KEY
       ? reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
@@ -77,13 +81,13 @@ Reader::Reader(const ReaderCallback& fn) : Endpoint(0, "READER_NODE"), reader_li
       break;
   }
 
-    history_ = std::make_unique<eprosima::fastrtps::rtps::ReaderHistory>(history_attr_);
-    if (history_ == nullptr)
+    reader_history_ = std::make_unique<eprosima::fastrtps::rtps::ReaderHistory>(history_attr_);
+    if (reader_history_ == nullptr)
     {
       throw std::runtime_error("Creating ReaderHistory failed");
     }
 
-    reader_ = eprosima::fastrtps::rtps::RTPSDomain::createRTPSReader(participant_, reader_attr_, history_.get(), &reader_listener_);
+    reader_ = eprosima::fastrtps::rtps::RTPSDomain::createRTPSReader(participant_, reader_attr_, reader_history_.get(), &reader_listener_);
     if (reader_ == nullptr)
     {
       throw std::runtime_error("Creating createRTPSReader failed");

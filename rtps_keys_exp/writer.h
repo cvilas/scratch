@@ -32,7 +32,7 @@ private:
     eprosima::fastrtps::rtps::WriterAttributes writer_attr_;
     eprosima::fastrtps::WriterQos writer_qos_;
     Listener writer_listener_;
-    std::unique_ptr<eprosima::fastrtps::rtps::WriterHistory> history_;
+    std::unique_ptr<eprosima::fastrtps::rtps::WriterHistory> writer_history_;
     eprosima::fastrtps::rtps::RTPSWriter* writer_;
 };
 

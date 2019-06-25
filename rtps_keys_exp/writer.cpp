@@ -29,6 +29,7 @@ void Writer::Listener::onWriterMatched(eprosima::fastrtps::rtps::RTPSWriter* wri
 Writer::Writer() : Endpoint(0, "WRITER_NODE"), writer_(nullptr)
 //=====================================================================================================================
 {
+  /// Change 1: Set endpoint topic kind
   test::MyTopicAttributes::HAS_KEY
       ? writer_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
       : writer_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
@@ -76,13 +77,13 @@ Writer::Writer() : Endpoint(0, "WRITER_NODE"), writer_(nullptr)
       break;
   }
 
-    history_ = std::make_unique<eprosima::fastrtps::rtps::WriterHistory>(history_attr_);
-    if (history_ == nullptr)
+    writer_history_ = std::make_unique<eprosima::fastrtps::rtps::WriterHistory>(history_attr_);
+    if (writer_history_ == nullptr)
     {
       throw std::runtime_error("Creating RTPSWriterHistory failed");
     }
 
-    writer_ = eprosima::fastrtps::rtps::RTPSDomain::createRTPSWriter(participant_, writer_attr_, history_.get(), &writer_listener_);
+    writer_ = eprosima::fastrtps::rtps::RTPSDomain::createRTPSWriter(participant_, writer_attr_, writer_history_.get(), &writer_listener_);
     if (writer_ == nullptr)
     {
       throw std::runtime_error("Creating createRTPSWriter failed");
@@ -122,8 +123,12 @@ void Writer::write(const uint8_t* pData, uint32_t dataLength)
 
   const std::function<uint32_t()> dataSizeFunc = [dataLength]() -> uint32_t { return dataLength * sizeof(uint8_t); };
 
+  /// **** TEST ****
+  /// create and set an instance handle manually for subsequence writer->new_change() calls to use
   eprosima::fastrtps::rtps::InstanceHandle_t h;
   h.value[0] = 0x01;
+  /// ***** \TEST ****
+
   eprosima::fastrtps::rtps::CacheChange_t* pchange = writer_->new_change(dataSizeFunc, eprosima::fastrtps::rtps::ChangeKind_t::ALIVE, h);
 
   // In the case history is full, remove some old changes
@@ -145,7 +150,7 @@ void Writer::write(const uint8_t* pData, uint32_t dataLength)
     pchange->setFragmentSize(MAX_UNFRAGMENTED_PAYLOAD_SIZE);
   }
   memcpy(pchange->serializedPayload.data, pData, dataLength);
-  history_->add_change(pchange);
+  writer_history_->add_change(pchange);
 }
 
 }

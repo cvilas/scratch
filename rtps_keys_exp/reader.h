@@ -35,7 +35,7 @@ private:
     eprosima::fastrtps::rtps::ReaderAttributes reader_attr_;
     eprosima::fastrtps::ReaderQos reader_qos_;
     Listener reader_listener_;
-    std::unique_ptr<eprosima::fastrtps::rtps::ReaderHistory> history_;
+    std::unique_ptr<eprosima::fastrtps::rtps::ReaderHistory> reader_history_;
     eprosima::fastrtps::rtps::RTPSReader* reader_;
 };
 
