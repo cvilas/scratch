@@ -77,7 +77,8 @@ Endpoint::ParticipantListener::ParticipantListener(Endpoint& n) : endpoint_(n)
 }
 
 //=====================================================================================================================
-void Endpoint::ParticipantListener::onParticipantDiscovery(eprosima::fastrtps::rtps::RTPSParticipant* pPart, eprosima::fastrtps::rtps::ParticipantDiscoveryInfo&& info)
+void Endpoint::ParticipantListener::onParticipantDiscovery(eprosima::fastrtps::rtps::RTPSParticipant* pPart, 
+                                                           eprosima::fastrtps::rtps::ParticipantDiscoveryInfo&& info)
 //=====================================================================================================================
 {
   // std::cout << "[NodeImpl::Listener::onRTPSParticipantDiscovery]:\n";

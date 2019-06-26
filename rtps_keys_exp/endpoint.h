@@ -19,7 +19,8 @@ class Endpoint
     public:
       ParticipantListener(Endpoint& n);
       ~ParticipantListener() noexcept = default;
-      void onParticipantDiscovery(eprosima::fastrtps::rtps::RTPSParticipant* pPart, eprosima::fastrtps::rtps::ParticipantDiscoveryInfo&& info) final;
+      void onParticipantDiscovery(eprosima::fastrtps::rtps::RTPSParticipant* pPart, 
+                                  eprosima::fastrtps::rtps::ParticipantDiscoveryInfo&& info) final;
     private:
       Endpoint& endpoint_;
     };
