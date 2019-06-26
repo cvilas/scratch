@@ -38,13 +38,19 @@ Reader::Reader(const ReaderCallback& fn) : Endpoint(0, "READER_NODE"), reader_li
 //=====================================================================================================================
 {
   /// \todo
-  /// - Set all fields in reader_attr_, reader_qos_, history_, topic_attr_
-  /// - Set all fields in writer_attr_, writer_qos_, history_
+  /// - Set all fields in reader_attr_, reader_qos_, topic_attr_
+  /// - Set all fields in writer_attr_, writer_qos_
 
   /// Change 1: Set endpoint topic kind
-  test::MyTopicAttributes::HAS_KEY
-      ? reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY
-      : reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
+  if(test::MyTopicAttributes::HAS_KEY)
+  {
+    reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::WITH_KEY;
+    reader_attr_.expectsInlineQos = true;
+  }
+  else
+  {
+    reader_attr_.endpoint.topicKind = eprosima::fastrtps::rtps::TopicKind_t::NO_KEY;
+  }
 
   // set reliability qos
   switch (MyTopicAttributes::RELIABILITY_QOS)
