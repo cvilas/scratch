@@ -8,7 +8,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Core Widgets OpenGL PrintSupport REQUIRED)
 
-add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
+#add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
 add_executable(qcp_example 
     qcp/window.cpp 
