@@ -63,15 +63,15 @@ void Window::setup()
   grid->attach( plot );
 
   curve = new QwtPlotCurve;
-  curve->setPen(QColor(40, 110, 255), 1, Qt::PenStyle::DashLine);
+  curve->setPen(QColor(40, 110, 255));
   curve->attach(plot);
 
   curve2 = new QwtPlotCurve;
-  curve2->setPen(QColor(255, 110, 40), 1, Qt::PenStyle::SolidLine);
+  curve2->setPen(QColor(255, 110, 40));
   curve2->attach(plot);
 
   curve3 = new QwtPlotCurve;
-  curve3->setPen(QColor(40, 255, 40), 1, Qt::PenStyle::DashDotLine);
+  curve3->setPen(QColor(40, 255, 40));
   curve3->attach(plot);
 
   plot->setAxisAutoScale(QwtPlot::xBottom);
