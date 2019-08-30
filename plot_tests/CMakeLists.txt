@@ -2,12 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 
 project(plot_tests)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(OpenGL REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets OpenGL PrintSupport REQUIRED)
+find_package(Qwt REQUIRED)
 
 #add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
@@ -24,4 +27,4 @@ add_executable(qwt_example
     qwt/main.cpp)
 
 target_link_libraries(qcp_example Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport OpenGL::GL)
-target_link_libraries(qwt_example qwt-qt5 Qt5::Widgets Qt5::OpenGL)
+target_link_libraries(qwt_example ${QWT_LIBRARY} Qt5::Widgets Qt5::OpenGL)
