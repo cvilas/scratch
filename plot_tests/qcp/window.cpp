@@ -39,7 +39,7 @@
 **                                                                                                         **
 *************************************************************************************************************/
 
-#include "mainwindow.h"
+#include "window.h"
 #include "qcustomplot.h"
 
 Window::Window(QWidget *parent) : QMainWindow(parent)
