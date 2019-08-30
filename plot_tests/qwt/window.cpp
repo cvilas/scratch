@@ -11,9 +11,7 @@
 #include <qwt/qwt_plot.h>
 #include <qwt/qwt_plot_curve.h>
 
-#define USE_OPENGL 0
-
-#if USE_OPENGL
+#if QCUSTOMPLOT_USE_OPENGL
 class GLCanvas: public QwtPlotGLCanvas
 {
 public:
@@ -42,7 +40,7 @@ Window::Window(QWidget* parent) : QMainWindow(parent)
 {
   plot = new QwtPlot;
 
-#if USE_OPENGL
+#if QCUSTOMPLOT_USE_OPENGL
   // use opengl canvas
   QwtPlotGLCanvas *plotCanvas = qobject_cast<QwtPlotGLCanvas *>( plot->canvas() );
   plotCanvas = new GLCanvas();

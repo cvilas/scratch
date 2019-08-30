@@ -45,7 +45,11 @@
 Window::Window(QWidget *parent) : QMainWindow(parent)
 {
   plot = new QCustomPlot;
+#ifdef QCUSTOMPLOT_USE_OPENGL
+  plot->setOpenGl(true);
+#else
   plot->setOpenGl(false);
+#endif
   setCentralWidget(plot);
   setup();
 
