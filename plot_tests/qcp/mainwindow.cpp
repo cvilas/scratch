@@ -39,61 +39,103 @@
 **                                                                                                         **
 *************************************************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include "mainwindow.h"
+#include "qcustomplot.h"
 
-#include <QMainWindow>
-#include <QTimer>
-#include "qcustomplot.h" // the header file of QCustomPlot. Don't forget to add it to your project, if you use an IDE, so it gets compiled.
+Window::Window(QWidget *parent) : QMainWindow(parent)
+{
+  plot = new QCustomPlot;
+  plot->setOpenGl(false);
+  setCentralWidget(plot);
+  setup();
 
-namespace Ui {
-class MainWindow;
+  qDebug() << "using opengl: " << plot->openGl();
 }
 
-class MainWindow : public QMainWindow
-{
-  Q_OBJECT
-  
-public:
-  explicit MainWindow(QWidget *parent = 0);
-  ~MainWindow();
-  
-  void setupDemo(int demoIndex);
-  void setupQuadraticDemo(QCustomPlot *customPlot);
-  void setupSimpleDemo(QCustomPlot *customPlot);
-  void setupSincScatterDemo(QCustomPlot *customPlot);
-  void setupScatterStyleDemo(QCustomPlot *customPlot);
-  void setupLineStyleDemo(QCustomPlot *customPlot);
-  void setupScatterPixmapDemo(QCustomPlot *customPlot);
-  void setupDateDemo(QCustomPlot *customPlot);
-  void setupTextureBrushDemo(QCustomPlot *customPlot);
-  void setupMultiAxisDemo(QCustomPlot *customPlot);
-  void setupLogarithmicDemo(QCustomPlot *customPlot);
-  void setupRealtimeDataDemo(QCustomPlot *customPlot);
-  void setupParametricCurveDemo(QCustomPlot *customPlot);
-  void setupBarChartDemo(QCustomPlot *customPlot);
-  void setupStatisticalDemo(QCustomPlot *customPlot);
-  void setupSimpleItemDemo(QCustomPlot *customPlot);
-  void setupItemDemo(QCustomPlot *customPlot);
-  void setupStyledDemo(QCustomPlot *customPlot);
-  void setupAdvancedAxesDemo(QCustomPlot *customPlot);
-  void setupColorMapDemo(QCustomPlot *customPlot);
-  void setupFinancialDemo(QCustomPlot *customPlot);
-  
-  void setupPlayground(QCustomPlot *customPlot);
-  
-private slots:
-  void realtimeDataSlot();
-  void bracketDataSlot();
-  void screenShot();
-  void allScreenShots();
-  
-private:
-  Ui::MainWindow *ui;
-  QString demoName;
-  QTimer dataTimer;
-  QCPItemTracer *itemDemoPhaseTracer;
-  int currentDemoIndex;
-};
+void Window::setup()
+{ 
+  plot->addGraph(); // blue line
+  plot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+  plot->addGraph(); // red line
+  plot->graph(1)->setPen(QPen(QColor(255, 110, 40)));
+  plot->addGraph(); // green line
+  plot->graph(2)->setPen(QPen(QColor(40, 255, 40)));
 
-#endif // MAINWINDOW_H
+  QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+  timeTicker->setTimeFormat("%h:%m:%s");
+  plot->xAxis->setTicker(timeTicker);
+  plot->axisRect()->setupFullAxesBox();
+  
+  // make left and bottom axes transfer their ranges to right and top axes:
+  connect(plot->xAxis, SIGNAL(rangeChanged(QCPRange)), plot->xAxis2, SLOT(setRange(QCPRange)));
+  connect(plot->yAxis, SIGNAL(rangeChanged(QCPRange)), plot->yAxis2, SLOT(setRange(QCPRange)));
+  
+  // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
+  connect(&dataTimer, SIGNAL(timeout()), this, SLOT(update()));
+  dataTimer.start(0); // Interval 0 means to refresh as fast as possible
+}
+
+void Window::update()
+{
+  static QTime time(QTime::currentTime());
+
+  double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+  static double lastPointKey = 0;
+  if (key-lastPointKey > 0.002) // at most add point every 2 ms
+  {
+    // add data to lines:
+    plot->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
+    plot->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*0.5*qSin(key/0.4364));
+    plot->graph(2)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*0.5*qCos(key/0.4364));
+
+    lastPointKey = key;
+
+    plot->xAxis->setRange(key, 8, Qt::AlignRight);
+    plot->graph(0)->rescaleValueAxis();
+    plot->graph(1)->rescaleValueAxis();
+    plot->graph(2)->rescaleValueAxis();
+  }
+  plot->replot();
+  
+  // calculate frames per second:
+  static double lastFpsKey;
+  static int frameCount;
+  ++frameCount;
+  if (key-lastFpsKey > 2) // average fps over 2 seconds
+  {
+    statusBar()->showMessage(
+          QString("%1 FPS, Total Data points: %2")
+          .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
+          .arg(plot->graph(0)->data()->size()+plot->graph(1)->data()->size()+plot->graph(2)->data()->size())
+          , 0);
+    lastFpsKey = key;
+    frameCount = 0;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
