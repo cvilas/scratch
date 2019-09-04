@@ -13,7 +13,7 @@ find_package(Qt5 COMPONENTS Core Widgets OpenGL PrintSupport REQUIRED)
 find_package(Qwt REQUIRED)
 
 # Turn on to enable rendering using OpenGL for both
-#add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
+add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
 add_executable(qcp_example 
     qcp/window.cpp 

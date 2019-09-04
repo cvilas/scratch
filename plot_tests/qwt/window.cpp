@@ -88,6 +88,7 @@ void Window::update()
 
   double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
   static double lastPointKey = 0;
+
   if (key-lastPointKey > 0.002) // at most add point every 2 ms
   {
     xData.append(key);
