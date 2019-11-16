@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+#include <any>
+
 ///====================================================================================================================
 /// Base class to store run-time type information.
 ///
@@ -41,7 +43,7 @@ public:
     const TypeInfo* getParentInfo() const { return _pParent; }
     bool isClass(const std::string& className) const { return className == getClassName(); }
     bool isDerivedFromClass(const TypeInfo& baseClassType) const;
-    virtual void* createObject() const = 0;
+    virtual std::any createObject() const = 0;
 
 protected:
     static std::vector<TypeInfo*>& singletonDB();

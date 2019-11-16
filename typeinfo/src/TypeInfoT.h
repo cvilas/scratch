@@ -17,7 +17,7 @@ public:
     ~TypeInfoT() {}
     std::string getClassName() const final { return _className; }
     std::string getParentClassName() const final { return _parentClassName;}
-    void* createObject() const { return new T; }
+    std::any createObject() const { return T(); }
 private:
     void registerType();
     std::string _className;
