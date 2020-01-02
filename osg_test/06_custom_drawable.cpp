@@ -3,7 +3,7 @@
 #include <osg/Geode>
 #include <osgViewer/Viewer>
 
-/// To implement own Drawable, overload following virtual methods in the osg::Drawable pure class:
+/// To implement own Drawable, overload following virtual methods in the osg::Drawable class:
 /// - computeBoundingBox() to compute the bounding box around the geometry, which will be used in
 /// the view frustum culling process to decide whether to cull the geometry or not
 /// - drawImplementation() to draw the geometry with OSG and OpenGL calls
