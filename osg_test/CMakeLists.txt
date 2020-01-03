@@ -17,7 +17,12 @@ set(examples
     03_octahedron
     04_tessellate
     05_triangle_face_collector
-    06_custom_drawable)
+    06_custom_drawable
+    07_translate
+    08_lod
+    09_load_at_runtime
+    10_traverse
+    11_visitor)
 
 foreach(example_name ${examples})
     add_executable(${example_name} ${example_name}.cpp)
