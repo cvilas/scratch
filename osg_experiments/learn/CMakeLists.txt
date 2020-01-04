@@ -16,7 +16,13 @@ set(examples
     08_lod
     09_load_at_runtime
     10_traverse
-    11_visitor)
+    11_visitor
+    12_attributes
+    13_attributes
+    14_fog
+    15_lights
+    16_texture2d
+    17_translucent)
 
 foreach(example_name ${examples})
     add_executable(${example_name} ${example_name}.cpp)
