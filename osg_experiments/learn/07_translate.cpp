@@ -33,7 +33,7 @@ int main()
     transform1->addChild( model.get() );
 
     osg::ref_ptr<osg::MatrixTransform> transform2 = new osg::MatrixTransform;
-    transform2->setMatrix( osg::Matrix::translate(25.0f, 0.0f, 0.0f) );
+    transform2->setMatrix( osg::Matrix::translate(25.0f, 0.0f, 50.0f) );
     transform2->addChild( model.get() );
 
     /// Add the two transformation nodes to the root node and start the viewer:
