@@ -2,24 +2,25 @@
 
 ## Basic demo
 
-- Define a model in a script
-    - Add ground plane and a few objects for reference
-    - Add wemo body and wheels at kinematically correct locations
+- Define kinematically correct model
+- Define DDS odometry receiver node
 - Animate the model
-    - Get reference to nodes in the model defined in script
-    - Use wemo kinematics to move robot at a desired speed
-    - Rotate wheels programmatically as per kinematic model
+    - body movement with odometry pose
+    - wheels rotation with odometry speeds and kinematics
+- Build application using cmake
+
+## Advanced Demo
+
+- Define model in a script
+- Animate model by applying transforms to nodes defined in script
+- Add environment objects
+- Define a front facing camera on robot
+- Show scene view and robot camera view simultaneously
 - User interaction
     - rotate
     - translate
     - click on robot to show overlay with speed info
 - Show viewer as a Qt widget
-- Build application using cmake
-
-## Advanced Demo
-
-- Define a front facing camera on robot
-- Show scene view and robot camera view simultaneously
 
 ## Notes
 
