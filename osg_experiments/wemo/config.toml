@@ -1,0 +1,5 @@
+[WemoMotionModel]
+wheel_radius = 0.1524
+wheel_base = 0.7
+wheel_track = 0.7
+wheel_error_factor = 0.01 # positive constant scale factor for wheel displacement measurement error
