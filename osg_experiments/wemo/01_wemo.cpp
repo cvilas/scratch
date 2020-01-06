@@ -161,6 +161,8 @@ void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex,
   robot_tr_body_->setPosition(pos * 1000.);
   robot_tr_body_->setAttitude(rot);
 
+  /// \todo: get rid of kinematic model and drive the wheels directly from hardware messages
+
   static Eigen::Vector4d wheels{0,0,0,0};
   static auto last_time = hive::timing::secondsSinceEpoch();
   const auto now = hive::timing::secondsSinceEpoch();
@@ -169,11 +171,6 @@ void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex,
   const auto wheel_speeds = motion_model_.computeWheelDelta(odo.uncertain_twist.twist.linear.x(),
                                                             odo.uncertain_twist.twist.linear.y(),
                                                             odo.uncertain_twist.twist.angular.z());
-  /// \todo
-  /// - set wheel positions correctly
-  /// - set wheel orientation so that rollers point in the right direction
-  /// - set up animation to rotate the wheels at speed above
-
   wheels += wheel_speeds * dt;
   tr_wheel1_->setAttitude(osg::Quat(wheels[0], osg::Vec3d(0,1,0)));
   tr_wheel2_->setAttitude(osg::Quat(wheels[1], osg::Vec3d(0,1,0)));
