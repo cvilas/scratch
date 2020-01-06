@@ -56,47 +56,50 @@ Visualiser::Visualiser()
 void Visualiser::initScene()
 //---------------------------------------------------------------------------------------------------------------------
 {
-  osg::ref_ptr<osg::Node> wheel = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_wheel.osgt" );
+  osg::ref_ptr<osg::Node> wheel1 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_wheel0.osgt" );
+  osg::ref_ptr<osg::Node> wheel0 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_wheel1.osgt" );
   osg::ref_ptr<osg::Node> body = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_body.osgt" );
-
-  // rotate to align body frame with our body frame convention (X:forward, Y:port, Z:up)
-  osg::ref_ptr<osg::MatrixTransform> rotate_body = new osg::MatrixTransform(osg::Matrix::rotate(-M_PI/2, 1, 0, 0));
-  rotate_body->addChild(body.get());
-
-  /// \todo:
-  /// - wheel positions should be read from WemoMotionModel
-  /// - we need two different wheel models for left and right wheels
-  /// - set wheel position and orientation properly
-  /// - set transform to rotate wheel about axis
-
-  tr_wheel1_ = new osg::PositionAttitudeTransform;
-  tr_wheel1_->setPosition(osg::Vec3d(0.350, 0.0, 0.350));
-  tr_wheel1_->addChild( wheel.get() );
-
-  tr_wheel2_ = new osg::PositionAttitudeTransform;
-  tr_wheel2_->setPosition(osg::Vec3d(-0.350, 0.0, 0.350) );
-  tr_wheel2_->addChild( wheel.get() );
-
-  tr_wheel3_ = new osg::PositionAttitudeTransform;
-  tr_wheel3_->setPosition(osg::Vec3d(-0.350, 0.0, -0.350) );
-  tr_wheel3_->addChild( wheel.get() );
-
-  tr_wheel4_ = new osg::PositionAttitudeTransform;
-  tr_wheel4_->setPosition(osg::Vec3d(0.350, 0.0, -0.350) );
-  tr_wheel4_->addChild( wheel.get() );
-
-  rotate_body->addChild( tr_wheel1_.get() );
-  rotate_body->addChild( tr_wheel2_.get() );
-  rotate_body->addChild( tr_wheel3_.get() );
-  rotate_body->addChild( tr_wheel4_.get() );
 
   robot_tr_body_ = new osg::PositionAttitudeTransform;
   robot_tr_body_->setPosition( osg::Vec3d(0.0, 0.0, 0.0) );
-  robot_tr_body_->addChild( rotate_body.get() );
+  robot_tr_body_->addChild( body.get() );
+
+  tr_wheel1_ = new osg::PositionAttitudeTransform;
+  tr_wheel1_->setPosition(osg::Vec3d(350, 350, 102.4));
+  osg::ref_ptr<osg::MatrixTransform> offset1 = new osg::MatrixTransform;
+  offset1->setMatrix(osg::Matrix::translate(0,0,-152.4));
+  offset1->addChild(wheel0.get());
+  tr_wheel1_->addChild( offset1.get() );
+
+  tr_wheel2_ = new osg::PositionAttitudeTransform;
+  tr_wheel2_->setPosition(osg::Vec3d(-350, 350, 102.4) );
+  osg::ref_ptr<osg::MatrixTransform> offset2 = new osg::MatrixTransform;
+  offset2->setMatrix(osg::Matrix::translate(0,0,-152.4));
+  offset2->addChild(wheel1.get());
+  tr_wheel2_->addChild( offset2.get() );
+
+  tr_wheel3_ = new osg::PositionAttitudeTransform;
+  tr_wheel3_->setPosition(osg::Vec3d(-350, -350, 102.4) );
+  osg::ref_ptr<osg::MatrixTransform> offset3 = new osg::MatrixTransform;
+  offset3->setMatrix(osg::Matrix::translate(0,0,-152.4));
+  offset3->addChild(wheel0.get());
+  tr_wheel3_->addChild( offset3.get() );
+
+  tr_wheel4_ = new osg::PositionAttitudeTransform;
+  tr_wheel4_->setPosition(osg::Vec3d(350, -350, 102.4) );
+  osg::ref_ptr<osg::MatrixTransform> offset4 = new osg::MatrixTransform;
+  offset4->setMatrix(osg::Matrix::translate(0,0,-152.4));
+  offset4->addChild(wheel1.get());
+  tr_wheel4_->addChild( offset4.get() );
+
+  robot_tr_body_->addChild(tr_wheel1_.get());
+  robot_tr_body_->addChild(tr_wheel2_.get());
+  robot_tr_body_->addChild(tr_wheel3_.get());
+  robot_tr_body_->addChild(tr_wheel4_.get());
 
   /// Add the two transformation nodes to the root node and start the viewer:
   osg_root_ = new osg::Group;
-  osg_root_->addChild( robot_tr_body_.get() );
+  osg_root_->addChild(robot_tr_body_.get());
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -155,7 +158,7 @@ void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex,
         odo.uncertain_pose.pose.orientation.z(),
         odo.uncertain_pose.pose.orientation.w()};
 
-  robot_tr_body_->setPosition(pos);
+  robot_tr_body_->setPosition(pos * 1000.);
   robot_tr_body_->setAttitude(rot);
 
   static Eigen::Vector4d wheels{0,0,0,0};
@@ -172,10 +175,10 @@ void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex,
   /// - set up animation to rotate the wheels at speed above
 
   wheels += wheel_speeds * dt;
-  tr_wheel1_->setAttitude(osg::Quat(wheels[0], osg::Vec3d(0,0,1)));
-  tr_wheel2_->setAttitude(osg::Quat(wheels[1], osg::Vec3d(0,0,1)));
-  tr_wheel3_->setAttitude(osg::Quat(wheels[2], osg::Vec3d(0,0,-1)));
-  tr_wheel4_->setAttitude(osg::Quat(wheels[3], osg::Vec3d(0,0,-1)));
+  tr_wheel1_->setAttitude(osg::Quat(wheels[0], osg::Vec3d(0,1,0)));
+  tr_wheel2_->setAttitude(osg::Quat(wheels[1], osg::Vec3d(0,1,0)));
+  tr_wheel3_->setAttitude(osg::Quat(wheels[2], osg::Vec3d(0,-1,0)));
+  tr_wheel4_->setAttitude(osg::Quat(wheels[3], osg::Vec3d(0,-1,0)));
 
 }
 
