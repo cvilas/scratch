@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>model/A-RBH-058-A.obj</file>
+        <file>model/test.stl</file>
+        <file>model/A-RBH-058-A.mtl</file>
+        <file>model/body.obj</file>
+    </qresource>
+</RCC>

@@ -1,4 +1,8 @@
-# OpenSceneGraph test
+# Visualisation test
+
+## Tested frameworks
+- Qt3D
+- OpenSceneGraph
 
 ## Basic demo
 

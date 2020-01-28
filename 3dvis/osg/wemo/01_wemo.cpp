@@ -26,10 +26,10 @@ public:
 private:
   void initScene();
   void initHive();
-  void onOdometry(const hive::uuid& src, const std::exception_ptr& ex, const hive::types::navigation::Odometry& odo);
+  void onOdometry(const hive::uuid& src, const std::exception_ptr& ex, const hive::types::Odometry& odo);
 
 private:
-  using OdometryReader = hive::dds::Reader<hive::types::navigation::Odometry>;
+  using OdometryReader = hive::dds::Reader<hive::types::Odometry>;
 
   std::exception_ptr exception_ptr_{};
   osg::ref_ptr<osg::Group> osg_root_{nullptr};
@@ -56,9 +56,9 @@ Visualiser::Visualiser()
 void Visualiser::initScene()
 //---------------------------------------------------------------------------------------------------------------------
 {
-  osg::ref_ptr<osg::Node> wheel1 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_wheel0.osgt" );
-  osg::ref_ptr<osg::Node> wheel0 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_wheel1.osgt" );
-  osg::ref_ptr<osg::Node> body = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/osg_experiments/wemo/model/wemo_body.osgt" );
+  osg::ref_ptr<osg::Node> wheel1 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/3dvis/osg/wemo/model/wemo_wheel0.osgt" );
+  osg::ref_ptr<osg::Node> wheel0 = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/3dvis/osg/wemo/model/wemo_wheel1.osgt" );
+  osg::ref_ptr<osg::Node> body = osgDB::readNodeFile("/home/vilas/projects/mine/scratch/3dvis/osg/wemo/model/wemo_body.osgt" );
 
   robot_tr_body_ = new osg::PositionAttitudeTransform;
   robot_tr_body_->setPosition( osg::Vec3d(0.0, 0.0, 0.0) );
@@ -137,7 +137,7 @@ auto Visualiser::ok() -> bool
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex, const hive::types::navigation::Odometry& odo)
+void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex, const hive::types::Odometry& odo)
 //---------------------------------------------------------------------------------------------------------------------
 {
   (void)src;

@@ -8,5 +8,5 @@ find_package(Eigen3)
 find_package(Threads)
 find_package(foonathan_memory)
 
-add_executable(01_wemo 01_wemo.cpp README.md config.toml)
-target_link_libraries(01_wemo osg osgUtil osgViewer osgDB osgGA robohive::wemo atomic)
+add_executable(wemo_osg 01_wemo.cpp config.toml)
+target_link_libraries(wemo_osg osg osgUtil osgViewer osgDB osgGA robohive::wemo atomic)

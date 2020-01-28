@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/models">
+        <file>body.qgltf</file>
+        <file>body_1.bin</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>body.obj</file>
+        <file>body.mtl</file>
+    </qresource>
+</RCC>
