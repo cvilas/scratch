@@ -34,5 +34,5 @@ wget http://archive.ubuntu.com/ubuntu/ubuntu/pool/main/p/pulseaudio/libpulse-dev
 sudo dpkg -i ./libpulse-dev_11.1-1ubuntu7.5_amd64.deb
 sudo apt install libsdl2-dev
 ```
-
+- Use gltf converter: https://blackthread.io/gltf-converter/
 - Use `osg::NotifyHandler` to redirect trace messages into custom handler

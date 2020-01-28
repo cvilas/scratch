@@ -70,10 +70,20 @@ void Visualiser::initScene()
     scene_root_ = new Qt3DCore::QEntity;
 
     // body
-    //Qt3DRender::QSceneLoader *body = new Qt3DRender::QSceneLoader;
-    //body->setSource(QUrl("qrc:/body.qgltf"));
-    //scene_root_ = body->entities()[0];
+    //auto bodyEntity = new Qt3DCore::QEntity(scene_root_);
+    //auto bodyMaterial = new Qt3DExtras::QPhongMaterial(scene_root_);
+    //auto bodyMesh = new Qt3DRender::QMesh(scene_root_);
+    //bodyMesh->setSource(QUrl("qrc:/A-RBH-058-A.glb"));
+    //bodyEntity->addComponent(bodyMesh);
+    //bodyEntity->addComponent(bodyMaterial);
 
+    auto *body = new Qt3DRender::QSceneLoader(scene_root_);
+    body->setSource(QUrl("qrc:/model/body.gltf"));
+    scene_root_->addComponent(body);
+
+    auto *wheel1 = new Qt3DRender::QSceneLoader(scene_root_);
+    wheel1->setSource(QUrl("qrc:/model/wheel1.gltf"));
+    scene_root_->addComponent(wheel1);
 
 /*********
     Qt3DCore::QEntity* torus = new Qt3DCore::QEntity(scene_root_);
