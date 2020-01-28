@@ -44,11 +44,11 @@ private:
 
   std::exception_ptr exception_ptr_{};
   Qt3DCore::QEntity* scene_root_{nullptr};
-//  osg::ref_ptr<osg::PositionAttitudeTransform> robot_tr_body_{nullptr};
-//  osg::ref_ptr<osg::PositionAttitudeTransform> tr_wheel1_{nullptr};
-//  osg::ref_ptr<osg::PositionAttitudeTransform> tr_wheel2_{nullptr};
-//  osg::ref_ptr<osg::PositionAttitudeTransform> tr_wheel3_{nullptr};
-//  osg::ref_ptr<osg::PositionAttitudeTransform> tr_wheel4_{nullptr};
+  Qt3DCore::QTransform* robot_tr_body_{nullptr};
+  Qt3DCore::QTransform* tr_wheel1_{nullptr};
+  Qt3DCore::QTransform* tr_wheel2_{nullptr};
+  Qt3DCore::QTransform* tr_wheel3_{nullptr};
+  Qt3DCore::QTransform* tr_wheel4_{nullptr};
   std::unique_ptr<hive::dds::Participant> participant_{ nullptr };
   std::unique_ptr<hive::logger::DDSLogAppender> log_appender_{ nullptr };
   std::unique_ptr<OdometryReader> odo_sub_{ nullptr };
@@ -69,31 +69,19 @@ void Visualiser::initScene()
 {
     scene_root_ = new Qt3DCore::QEntity;
 
-    // body
-    //auto bodyEntity = new Qt3DCore::QEntity(scene_root_);
-    //auto bodyMaterial = new Qt3DExtras::QPhongMaterial(scene_root_);
-    //auto bodyMesh = new Qt3DRender::QMesh(scene_root_);
-    //bodyMesh->setSource(QUrl("qrc:/A-RBH-058-A.glb"));
-    //bodyEntity->addComponent(bodyMesh);
-    //bodyEntity->addComponent(bodyMaterial);
-
     auto *body = new Qt3DRender::QSceneLoader(scene_root_);
     body->setSource(QUrl("qrc:/model/body.gltf"));
+    robot_tr_body_ = new Qt3DCore::QTransform;
+    robot_tr_body_->setTranslation(QVector3D(0.0, 0.0, 0.0));
+
     scene_root_->addComponent(body);
+    scene_root_->addComponent(robot_tr_body_);
 
     auto *wheel1 = new Qt3DRender::QSceneLoader(scene_root_);
     wheel1->setSource(QUrl("qrc:/model/wheel1.gltf"));
     scene_root_->addComponent(wheel1);
 
 /*********
-    Qt3DCore::QEntity* torus = new Qt3DCore::QEntity(scene_root_);
-
-    Qt3DExtras::QTorusMesh* mesh = new Qt3DExtras::QTorusMesh;
-    mesh->setRadius(5);
-    mesh->setMinorRadius(1);
-    mesh->setRings(100);
-    mesh->setSlices(20);
-
     Qt3DCore::QTransform* transform = new Qt3DCore::QTransform;
 //    transform->setScale3D(QVector3D(1.5, 1, 0.5));
     transform->setRotation(QQuaternion::fromAxisAndAngle(QVector3D(1,0,0), 45.f ));
@@ -103,22 +91,6 @@ void Visualiser::initScene()
     torus->addComponent(mesh);
     torus->addComponent(transform);
     torus->addComponent(material);
-/*
-
-/***************************
-  //Model shape data
-    Qt3DRender::QMesh * ModelMesh = new Qt3DRender::QMesh();
-    ModelMesh->setSource(QUrl::fromLocalFile("C:/Users/Chris/Model.obj"));
-
-
-    //Model Transform
-    Qt3DRender::QPhongMaterial *ModelMaterial = new Qt3DRender::QPhongMaterial();
-    ModelMaterial->setDiffuse(QColor(QRgb(0x665423)));
-
-    // Model
-    ModelEntity = new Qt3DCore::QEntity(m_rootEntity);
-    ModelEntity->addComponent(ModelMesh);
-    ModelEntity->addComponent(ModelMaterial);
 */
 
     /*******************
@@ -222,12 +194,12 @@ void Visualiser::onOdometry(const hive::uuid& src, const std::exception_ptr& ex,
     odo.uncertain_pose.pose.orientation.x(),
         odo.uncertain_pose.pose.orientation.y(),
         odo.uncertain_pose.pose.orientation.z());
-/*
-  robot_tr_body_->setPosition(pos * 1000.);
-  robot_tr_body_->setAttitude(rot);
+
+  robot_tr_body_->setTranslation(pos * 1000.);
+  robot_tr_body_->setRotation(rot);
 
   /// \todo: get rid of kinematic model and drive the wheels directly from hardware messages
-
+/*
   static Eigen::Vector4d wheels{0,0,0,0};
   static auto last_time = hive::timing::secondsSinceEpoch();
   const auto now = hive::timing::secondsSinceEpoch();
@@ -265,16 +237,17 @@ int main(int argc, char* argv[])
       //camera->setViewCenter(QVector3D(0, 1, 0));
 
       // manipulator
-      Qt3DExtras::QOrbitCameraController* manipulator = new Qt3DExtras::QOrbitCameraController(scene);
-      manipulator->setLinearSpeed(500.f);
-      manipulator->setLookSpeed(1800.f);
-      manipulator->setCamera(camera);
+      //Qt3DExtras::QOrbitCameraController* manipulator = new Qt3DExtras::QOrbitCameraController(scene);
+      //manipulator->setLinearSpeed(500.f);
+      //manipulator->setLookSpeed(1800.f);
+      //manipulator->setCamera(camera);
 
       view.setRootEntity(scene);
       view.show();
 
       while (vis.ok())
       {
+          /// \todo handle qapp exit
         app.processEvents();
       }
 
