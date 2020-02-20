@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QMainWindow>
 #include <QVector>
 
@@ -22,6 +23,7 @@ private slots:
 
 private:
   QTimer dataTimer;
+  QElapsedTimer elapsedTime;
 
   QwtPlot      *plot;
 	QwtPlotCurve *curve;
