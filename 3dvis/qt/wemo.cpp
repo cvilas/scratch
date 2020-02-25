@@ -3,17 +3,16 @@
 
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QTransform>
-#include <Qt3DCore/QAspectEngine>
+//#include <Qt3DCore/QAspectEngine>
 
-#include <Qt3DRender/qrenderaspect.h>
+//#include <Qt3DRender/qrenderaspect.h>
 #include <Qt3DRender/QCamera>
-#include <Qt3DRender/QMaterial>
-#include <Qt3DRender/QMesh>
+//#include <Qt3DRender/QMaterial>
+//#include <Qt3DRender/QMesh>
 
 #include <Qt3DExtras/Qt3DWindow>
-#include <Qt3DExtras/QTorusMesh>
 #include <Qt3DExtras/QOrbitCameraController>
-#include <Qt3DExtras/QPhongMaterial>
+//#include <Qt3DExtras/QPhongMaterial>
 
 #include <hive/robohive.h>
 #include <hive/types/navigation/odometry.h>
@@ -232,15 +231,15 @@ int main(int argc, char* argv[])
 
       // camera
       Qt3DRender::QCamera *camera = view.camera();
-      camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+      camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.001f, 10000.0f);
       //camera->setPosition(QVector3D(384, 210, -251.0f));
       //camera->setViewCenter(QVector3D(0, 1, 0));
 
       // manipulator
-      //Qt3DExtras::QOrbitCameraController* manipulator = new Qt3DExtras::QOrbitCameraController(scene);
-      //manipulator->setLinearSpeed(500.f);
-      //manipulator->setLookSpeed(1800.f);
-      //manipulator->setCamera(camera);
+      Qt3DExtras::QOrbitCameraController* manipulator = new Qt3DExtras::QOrbitCameraController(scene);
+      manipulator->setLinearSpeed(50.f);
+      manipulator->setLookSpeed(180.f);
+      manipulator->setCamera(camera);
 
       view.setRootEntity(scene);
       view.show();
