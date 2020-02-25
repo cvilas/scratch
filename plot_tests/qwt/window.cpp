@@ -2,7 +2,6 @@
 // #include "adcreader.h"
 
 #include <cmath>  // for sine stuff
-#include <QTime>
 #include <QStatusBar>
 #include <qwt/qwt_scale_widget.h>
 #include <qwt/qwt_plot_grid.h>
@@ -30,7 +29,7 @@ protected:
         if ( plot )
             plot->drawCanvas( &painter );
 
-        painter.setPen( palette().foreground().color() );
+        painter.setPen( palette().windowText().color() );
         painter.drawRect( rect().adjusted( 1, 1, 0, 0 ) );
     }
 };
@@ -77,6 +76,8 @@ void Window::setup()
   plot->setAxisAutoScale(QwtPlot::xBottom);
   plot->setAxisAutoScale(QwtPlot::yLeft);
 
+  elapsedTime.start();
+  
   // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
   connect(&dataTimer, SIGNAL(timeout()), this, SLOT(update()));
   dataTimer.start(0); // Interval 0 means to refresh as fast as possible
@@ -84,9 +85,8 @@ void Window::setup()
 
 void Window::update()
 {
-  static QTime time(QTime::currentTime());
 
-  double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+  double key = elapsedTime.elapsed()/1000.0; // time elapsed since start of demo, in seconds
   static double lastPointKey = 0;
 
   if (key-lastPointKey > 0.002) // at most add point every 2 ms
