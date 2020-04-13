@@ -19,7 +19,7 @@ class FoonathanmemoryConan(ConanFile):
     version = "0.6.2"
     license = "zlib"
     author = "Vilas Chitrakaran chitrakaran@arrival.com"
-    url = "https://github.com/foonathan/memory"
+    url = "https://git.tra.ai/robohive/conan-foonathan-memory"
     description = "STL compatible C++ memory allocator library."
     topics = ("allocator", "memory", "fast-rtps")
     settings = "os", "compiler", "build_type", "arch"
@@ -32,11 +32,15 @@ class FoonathanmemoryConan(ConanFile):
         git.clone("https://github.com/foonathan/memory.git", "v0.6-2")
         git.run("submodule update --init --recursive")
         
-    def build(self):
+    def configure_cmake(self):
         cmake = CMake(self, parallel=True)
         cmake.definitions["FOONATHAN_MEMORY_BUILD_EXAMPLES"] = False
         cmake.definitions["FOONATHAN_MEMORY_BUILD_TESTS"] = False
-        cmake.configure(source_folder="")
+        cmake.configure()
+        return cmake
+    
+    def build(self):
+        cmake = self.configure_cmake()
         cmake.build()
         cmake.install()
 
@@ -45,17 +49,3 @@ class FoonathanmemoryConan(ConanFile):
     
     def package_info(self):
         self.cpp_info.libs = ["foonathan_memory"]
-
-'''
-  git clone https://github.com/foonathan/memory.git
-  cd memory
-  git checkout v0.6-2
-  git submodule update --init --recursive
-  mkdir build && cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-  -DFOONATHAN_MEMORY_BUILD_EXAMPLES=OFF \
-  -DFOONATHAN_MEMORY_BUILD_TESTS=OFF \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_SHARED_LIBS=ON ..
-  make -j8 && sudo make install
-'''
