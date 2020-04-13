@@ -19,7 +19,7 @@ class FastcdrConan(ConanFile):
         git.clone("https://github.com/eProsima/Fast-CDR.git", "v1.0.13")
 
     def build(self):
-        cmake = CMake(self,paralel=True)
+        cmake = CMake(self,parallel=True)
         cmake.configure(source_folder="")
         cmake.build()
         cmake.install()
