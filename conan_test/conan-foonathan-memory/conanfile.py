@@ -19,7 +19,7 @@ class FoonathanmemoryConan(ConanFile):
     version = "0.6.2"
     license = "zlib"
     author = "Vilas Chitrakaran chitrakaran@arrival.com"
-    url = "https://git.tra.ai/robohive/conan-foonathan-memory"
+    url = "https://github.com/cvilas/conan-foonathan-memory"
     description = "STL compatible C++ memory allocator library."
     topics = ("allocator", "memory", "fast-rtps")
     settings = "os", "compiler", "build_type", "arch"

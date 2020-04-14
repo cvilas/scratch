@@ -6,7 +6,7 @@ class FastrtpsConan(ConanFile):
     version = "1.10.0"
     license = "Apache License 2.0"
     author = "Vilas Chitrakaran chitrakaran@arrival.com"
-    url = "https://git.tra.ai/robohive/conan-fastrtps"
+    url = "https://github.com/cvilas/conan-fastrtps"
     description = "An implementation of RTPS protocol"
     topics = ("dds", "fast-rtps", "omg")
     settings = "os", "compiler", "build_type", "arch"
@@ -15,12 +15,12 @@ class FastrtpsConan(ConanFile):
     generators = "cmake"
 
     def requirements(self):
-        self.requires.add('asio/1.14.0@arrival/stable')
-        self.requires.add('zlib/1.2.11@arrival/stable')
-        self.requires.add('openssl/1.1.1f@arrival/stable')
-        self.requires.add('tinyxml2/8.0.0@arrival/stable')
-        self.requires.add('fastcdr/1.0.12@arrival/stable')
-        self.requires.add('foonathan_memory/0.6-2@arrival/stable')
+        self.requires.add('asio/1.14.0')
+        self.requires.add('zlib/1.2.11')
+        self.requires.add('openssl/1.1.1f')
+        self.requires.add('tinyxml2/8.0.0')
+        self.requires.add('fastcdr/1.0.13@vilas/stable')
+        self.requires.add('foonathan_memory/0.6.2@vilas/stable')
 
     def source(self):
         git = tools.Git()

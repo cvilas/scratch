@@ -1,0 +1,3 @@
+- To create package `conan create . fastrtps/1.10.0@vilas/stable --build=tinyxml2 --build=zlib --build=openssl --build=fastrtps`
+- Before uploading package, set user: `conan user -r conan-vilas-stable cvilas`
+- Upload package: `conan upload fastrtps/1.10.0@vilas/stable -r=conan-vilas-stable`

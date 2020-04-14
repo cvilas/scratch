@@ -6,7 +6,7 @@ class FastcdrConan(ConanFile):
     version = "1.0.13"
     license = "Apache License 2.0"
     author = "Vilas Chitrakaran chitrakaran@arrival.com"
-    url = "https://git.tra.ai/robohive/conan-fastcdr"
+    url = "https://github.com/cvilas/conan-fastcdr"
     description = "Fast serialisation using CDR standard"
     topics = ("omg", "cdr", "fast-rtps")
     settings = "os", "compiler", "build_type", "arch"
