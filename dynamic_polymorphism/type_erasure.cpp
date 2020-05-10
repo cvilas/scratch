@@ -17,9 +17,7 @@ private:
   double radius_;
 };
 
-void translate(Circle const &, Vector3d const &) {
-  printf("translate circle\n");
-};
+void translate(Circle const &, Vector3d const &) { printf("translate circle\n"); };
 
 void rotate(Circle const &, Quaternion const &) { printf("rotate circle\n"); }
 
@@ -34,13 +32,11 @@ private:
   double side_;
 };
 
-void translate(Square const &, Vector3d const &) {
-  printf("translate square\n");
-}
+void translate(Square const &, Vector3d const &) { printf("translate square\n"); }
 
-void rotate(Square const &, Quaternion const &) { printf("rotate circle\n"); }
+void rotate(Square const &, Quaternion const &) { printf("rotate square\n"); }
 
-void draw(Square const &) { printf("draw circle\n"); }
+void draw(Square const &) { printf("draw square\n"); }
 
 class Shape {
 private:
@@ -51,12 +47,11 @@ private:
     virtual void do_draw() const = 0;
   };
 
-  template <typename T> struct Model : Concept {
+  template <typename T> 
+  struct Model : Concept {
     Model(T const &value) : object_(value) {}
 
-    void do_translate(Vector3d const &v) const override {
-      translate(object_, v);
-    }
+    void do_translate(Vector3d const &v) const override { translate(object_, v); }
 
     void do_rotate(Quaternion const &q) const override { rotate(object_, q); }
 
@@ -78,7 +73,8 @@ private:
   friend void draw(Shape const &shape) { shape.pimpl_->do_draw(); }
 
 public:
-  template <typename T> Shape(T const &x) : pimpl_(new Model<T>(x)) {}
+  template <typename T> 
+  Shape(T const &x) : pimpl_(new Model<T>(x)) {}
 
   Shape(Shape const &s) = delete;
   Shape(Shape &&s) : pimpl_(std::move(s.pimpl_)) {}
