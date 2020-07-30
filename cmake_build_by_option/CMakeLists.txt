@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(cmake_build_by_option)
+project(cmake_build_by_option CXX)
 
 include(cmake/helpers.cmake)
 
