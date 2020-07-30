@@ -1,56 +1,143 @@
-# declare global list of declared modules
-define_property(GLOBAL PROPERTY DECLARED_MODULES INHERITED
-        BRIEF_DOCS "All the modules in the system"
-        FULL_DOCS "All the modules in the system")
-set_property(GLOBAL PROPERTY DECLARED_MODULES "")
-
-# declare global list of modules marked for build
-define_property(GLOBAL PROPERTY ENABLED_MODULES INHERITED
-        BRIEF_DOCS "Modules marked to be built"
-        FULL_DOCS "Modules marked to be built")
-set_property(GLOBAL PROPERTY ENABLED_MODULES "")
-
-# macro to declare a module
-macro(module)
+#=======================================================================================================================
+# Recurse through directory tree and find all CMakeLists.txt files that contains robohive module declaration
+function(find_robohive_module_declarations _result)
     set(flags "")
-    set(single_opts NAME)
-    set(multi_opts DEPENDS_ON_MODULES)
+    set(single_opts ROOT_PATH)
+    set(multi_opts "")
+
+    # This is the regex string we search for in the files to find a robohive module declaration
+    set(_declaration_search_regex "robohive_module\\((NAME)")
 
     include(CMakeParseArguments)
-    cmake_parse_arguments(PACKAGE_ARG
+    cmake_parse_arguments(_ARG
             "${flags}"
             "${single_opts}"
             "${multi_opts}"
             ${ARGN})
 
-    if(PACKAGE_ARG_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unparsed arguments: ${PACKAGE_ARG_UNPARSED_ARGUMENTS}")
+    if(_ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${_ARG_UNPARSED_ARGUMENTS}")
     endif()
 
-    if(NOT PACKAGE_ARG_NAME)
+    if(NOT _ARG_ROOT_PATH)
+        message(FATAL_ERROR "ROOT_PATH not specified.")
+    endif()
+
+    # - Find all cmakelists.txt recursively starting from specified path
+    # - From these, extract those that contain 'robohive_module' string
+    file(GLOB_RECURSE _all_cmakelists "${_ARG_ROOT_PATH}/CMakeLists.txt")
+
+    SET(_module_files_list)
+    foreach(_file ${_all_cmakelists})
+        file(STRINGS "${_file}" _lines REGEX ${_declaration_search_regex})
+        if(_lines)
+            list(APPEND _module_files_list "${_file}")
+        endif()
+    endforeach()
+    set(${_result} ${_module_files_list} PARENT_SCOPE)
+
+endfunction()
+
+#=======================================================================================================================
+# Recurse through source tree and gather information about declared robohive modules
+function(enumerate_robohive_modules)
+    set(flags "")
+    set(single_opts ROOT_PATH)
+    set(multi_opts "")
+    include(CMakeParseArguments)
+
+    cmake_parse_arguments(_ARG
+            "${flags}"
+            "${single_opts}"
+            "${multi_opts}"
+            ${ARGN})
+
+    if(_ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${_ARG_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(NOT _ARG_ROOT_PATH)
+        message(FATAL_ERROR "ROOT_PATH not specified.")
+    endif()
+
+    message(STATUS "enumerate called from ${CMAKE_CURRENT_LIST_FILE}")
+
+    # Run through all module files collecting information about them
+    set(_module_paths)
+    find_robohive_module_declarations(_module_paths ROOT_PATH ${_ARG_ROOT_PATH})
+    set(_ROBOHIVE_MODULES_ENUMERATE_FLAG ON CACHE INTERNAL "Enumeration of modules in progress")
+    message(STATUS "Enumerating module declarations:")
+    foreach(_module IN LISTS _module_paths)
+        if(NOT ${_module} STREQUAL ${CMAKE_CURRENT_LIST_FILE}) # avoid recursion
+            message(STATUS "  ${_module}")
+            include(${_module})
+        endif()
+    endforeach()
+    set(_ROBOHIVE_MODULES_ENUMERATE_FLAG OFF CACHE INTERNAL "")
+
+endfunction()
+
+#=======================================================================================================================
+# declare global list of declared modules
+define_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES INHERITED
+        BRIEF_DOCS "All the declared robohive modules in the system"
+        FULL_DOCS "All the declared robohive modules in the system")
+set_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES "")
+
+# declare global list of modules marked for build
+define_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES INHERITED
+        BRIEF_DOCS "Robohive modules marked for build"
+        FULL_DOCS "Robohive modules marked for build")
+set_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES "")
+
+# macro to declare a module
+macro(robohive_module)
+    set(flags "")
+    set(single_opts NAME)
+    set(multi_opts DEPENDS_ON_MODULES)
+
+    include(CMakeParseArguments)
+    cmake_parse_arguments(MODULE_ARG
+            "${flags}"
+            "${single_opts}"
+            "${multi_opts}"
+            ${ARGN})
+
+    if(MODULE_ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${MODULE_ARG_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(NOT MODULE_ARG_NAME)
         message(FATAL_ERROR "Project name not specified")
     endif()
 
-    set_property(GLOBAL APPEND PROPERTY DECLARED_MODULES ${PACKAGE_ARG_NAME})
-    set(MODULE_LOCATION_${PACKAGE_ARG_NAME} "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "location of ${PACKAGE_ARG_NAME}")
-    set(MODULE_DEPENDS_${PACKAGE_ARG_NAME} ${PACKAGE_ARG_DEPENDS_ON_MODULES} CACHE INTERNAL "Dependencies of ${PACKAGE_ARG_NAME}")
-
-    message(STATUS "${PACKAGE_ARG_NAME} first pass")
-    if(FIRST_PASS)
+    # if we are just enumerating modules, then set module meta information and exit
+    # create global variables:
+    #   ROBOHIVE_DECLARED_MODULES
+    #   BUILD_<robohive_module>
+    #   ROBOHIVE_MODULE_<robohive_module>_PATH
+    #   ROBOHIVE_MODULE_<robohive_module>_DEPENDS_ON
+    if(_ROBOHIVE_MODULES_ENUMERATE_FLAG)
+        set_property(GLOBAL APPEND PROPERTY ROBOHIVE_DECLARED_MODULES ${MODULE_ARG_NAME})
+        set(ROBOHIVE_MODULE_${MODULE_ARG_NAME}_LOCATION "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "location of ${MODULE_ARG_NAME}")
+        set(ROOBHIVE_MODULE_${MODULE_ARG_NAME}_DEPENDS_ON ${MODULE_ARG_DEPENDS_ON_MODULES} CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}")
         return()
     endif()
-    message(STATUS "${PACKAGE_ARG_NAME} second pass")
+
+
+    message(STATUS "_ROBOHIVE_MODULES_ENUMERATE_FLAG = ${_ROBOHIVE_MODULES_ENUMERATE_FLAG}")
+    return()
 
     # Configuration-time user option to build this project
-    option(BUILD_${PACKAGE_ARG_NAME} "Build module ${PACKAGE_ARG_NAME}" OFF)
-    if(NOT BUILD_${PACKAGE_ARG_NAME})
+    option(BUILD_${MODULE_ARG_NAME} "Build module ${MODULE_ARG_NAME}" OFF)
+    if(NOT BUILD_${MODULE_ARG_NAME})
         return()
     endif()
 
-    project(${PACKAGE_ARG_NAME} CXX)
+    project(${MODULE_ARG_NAME} CXX)
 
-    mark_module_to_build(${PACKAGE_ARG_NAME})
-    foreach(dep IN LISTS PACKAGE_ARG_DEPENDS_ON_MODULES)
+    mark_module_to_build(${MODULE_ARG_NAME})
+    foreach(dep IN LISTS MODULE_ARG_DEPENDS_ON_MODULES)
         mark_module_to_build(${dep})
     endforeach()
 
@@ -72,6 +159,7 @@ function(remove_duplicates_in_global_list _list)
     set_property(GLOBAL PROPERTY ${_list} ${_list_content})
 endfunction()
 
+
 # Get a list of variables with specified prefix
 function (get_list_of_variables_starting_with _prefix _varResult)
     get_cmake_property(_vars VARIABLES)
@@ -87,47 +175,3 @@ macro(print_cmake_variables)
     endforeach()
 endmacro()
 
-file_contains_string(STRING "robohive_module"
-        INPUT_LIST list_input
-        OUTPUT list_out)
-
-function(list_subdirectories _result _current_dir)
-    FILE(GLOB children RELATIVE ${_current_dir} ${_current_dir}/*)
-    SET(dirlist "")
-    FOREACH(child ${children})
-        IF(IS_DIRECTORY ${_current_dir}/${child})
-            LIST(APPEND dirlist ${child})
-        ENDIF()
-    ENDFOREACH()
-    SET(${_result} ${dirlist})
-endfunction()
-
-function(files_containing_string)
-    set(flags "")
-    set(single_opts STRING OUTPUT_LIST)
-    set(multi_opts INPUT_LIST)
-
-    include(CMakeParseArguments)
-    cmake_parse_arguments(FUNC_ARG
-            "${flags}"
-            "${single_opts}"
-            "${multi_opts}"
-            ${ARGN})
-
-    if(FUNC_ARG_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unparsed arguments: ${FUNC_ARG_UNPARSED_ARGUMENTS}")
-    endif()
-
-    if(NOT FUNC_ARG_STRING)
-        message(FATAL_ERROR "STRING not specified")
-    endif()
-
-    SET(files_list)
-    foreach(_file ${FUNC_ARG_INPUT_LIST})
-        file(STRINGS "${_file}" lines REGEX "${FUNC_ARG_STRING}")
-        if(lines)
-            list(APPEND files_list "${_file}")
-        endif()
-    endforeach()
-    set(${OUTPUT} ${files_list})
-endfunction()

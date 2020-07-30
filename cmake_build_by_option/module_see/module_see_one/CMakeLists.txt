@@ -1,5 +1,5 @@
 set(DEPS see)
-module(NAME one DEPENDS_ON_MODULES ${DEPS})
+robohive_module(NAME one DEPENDS_ON_MODULES ${DEPS})
 add_executable(one one.cpp)
 target_include_directories(one PRIVATE "../../module_ai" "../")
 target_link_libraries(one ${DEPS})
