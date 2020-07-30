@@ -75,6 +75,19 @@ function(enumerate_robohive_modules)
     endforeach()
     set(_ROBOHIVE_MODULES_ENUMERATE_FLAG OFF CACHE INTERNAL "")
 
+    get_property(_declared_modules_list GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES)
+    message(STATUS "Modules detected: ${_declared_modules_list}")
+
+    # Go through list of enabled modules and mark it and its dependencies to be built
+    mark_modules_for_build()
+
+    # Add each marked module into the build
+    get_property(_enabled_modules_list GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES)
+    foreach(_m IN LISTS _enabled_modules_list)
+        add_subdirectory(${ROBOHIVE_MODULE_${_m}_PATH})
+    endforeach()
+    message(STATUS "Modules enabled (including dependencies): ${_enabled_modules_list}")
+
 endfunction()
 
 #=======================================================================================================================
@@ -84,12 +97,7 @@ define_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES INHERITED
         FULL_DOCS "All the declared robohive modules in the system")
 set_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES "")
 
-# declare global list of modules marked for build
-define_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES INHERITED
-        BRIEF_DOCS "Robohive modules marked for build"
-        FULL_DOCS "Robohive modules marked for build")
-set_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES "")
-
+#=======================================================================================================================
 # macro to declare a module
 macro(robohive_module)
     set(flags "")
@@ -108,8 +116,11 @@ macro(robohive_module)
     endif()
 
     if(NOT MODULE_ARG_NAME)
-        message(FATAL_ERROR "Project name not specified")
+        message(FATAL_ERROR "NAME not specified")
     endif()
+
+    # Configuration-time user option to build this project
+    option(BUILD_ROBOHIVE_MODULE_${MODULE_ARG_NAME} "Build module ${MODULE_ARG_NAME}" OFF)
 
     # if we are just enumerating modules, then set module meta information and exit
     # create global variables:
@@ -119,39 +130,76 @@ macro(robohive_module)
     #   ROBOHIVE_MODULE_<robohive_module>_DEPENDS_ON
     if(_ROBOHIVE_MODULES_ENUMERATE_FLAG)
         set_property(GLOBAL APPEND PROPERTY ROBOHIVE_DECLARED_MODULES ${MODULE_ARG_NAME})
-        set(ROBOHIVE_MODULE_${MODULE_ARG_NAME}_LOCATION "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "location of ${MODULE_ARG_NAME}")
-        set(ROOBHIVE_MODULE_${MODULE_ARG_NAME}_DEPENDS_ON ${MODULE_ARG_DEPENDS_ON_MODULES} CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}")
+        set(ROBOHIVE_MODULE_${MODULE_ARG_NAME}_PATH "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "location of ${MODULE_ARG_NAME}")
+        set(ROBOHIVE_MODULE_${MODULE_ARG_NAME}_DEPENDS_ON ${MODULE_ARG_DEPENDS_ON_MODULES} CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}")
+
+        # NOTE: Don't process the rest of the file in which this macro was called
         return()
     endif()
+endmacro()
 
+#=======================================================================================================================
+# declare global list of modules marked for build
+define_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES INHERITED
+        BRIEF_DOCS "Robohive modules marked for build either directly or to satisfy dependencies"
+        FULL_DOCS "Robohive modules marked for build either directly or to satisfy dependencies")
+set_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES "")
 
-    message(STATUS "_ROBOHIVE_MODULES_ENUMERATE_FLAG = ${_ROBOHIVE_MODULES_ENUMERATE_FLAG}")
-    return()
+#=======================================================================================================================
+# Recursively walk through all enabled modules and their dependencies and mark them for building
+function(mark_modules_for_build)
 
-    # Configuration-time user option to build this project
-    option(BUILD_${MODULE_ARG_NAME} "Build module ${MODULE_ARG_NAME}" OFF)
-    if(NOT BUILD_${MODULE_ARG_NAME})
-        return()
-    endif()
-
-    project(${MODULE_ARG_NAME} CXX)
-
-    mark_module_to_build(${MODULE_ARG_NAME})
-    foreach(dep IN LISTS MODULE_ARG_DEPENDS_ON_MODULES)
-        mark_module_to_build(${dep})
+    # walk through modules list and tag those explicity marked for build
+    get_property(_declared_modules GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES)
+    foreach(_m IN LISTS _declared_modules)
+        if(${BUILD_ROBOHIVE_MODULE_${_m}})
+            mark_single_module_for_build(NAME ${_m})
+            foreach(_dep IN LISTS ROBOHIVE_MODULE_${_m}_DEPENDS_ON)
+                mark_single_module_for_build(NAME ${_dep})
+            endforeach()
+        endif()
     endforeach()
 
-endmacro()
+    # revisit the marked modules and resolve dependencies recursively
+    set(_num_items_prev 0)
+    set(_num_items 1)
+    while(NOT(_num_items_prev EQUAL _num_items))
+        set(_num_items_prev ${_num_items})
+        get_property(_enabled_modules GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES)
+        list(LENGTH _enabled_modules _num_items)
+        foreach(_m IN LISTS _enabled_modules)
+            foreach(_dep IN LISTS ROBOHIVE_MODULE_${_m}_DEPENDS_ON)
+                mark_single_module_for_build(NAME ${_dep})
+            endforeach()
+        endforeach()
+    endwhile()
+endfunction()
 
-# macro to mark a module for build
-macro(mark_module_to_build _project_name)
-    message(STATUS "mark_project_to_build(${_project_name}) called by ${PROJECT_NAME}")
-    set(BUILD_${_project_name} ON CACHE BOOL "" FORCE)
-    set_property(GLOBAL APPEND PROPERTY ENABLED_MODULES ${_project_name})
-    remove_duplicates_in_global_list(ENABLED_MODULES)
+#=======================================================================================================================
+# Mark a single module for build
+function(mark_single_module_for_build)
+    set(flags "")
+    set(single_opts NAME)
+    set(multi_opts "")
 
-    # add project to global list
-endmacro()
+    include(CMakeParseArguments)
+    cmake_parse_arguments(_ARG
+            "${flags}"
+            "${single_opts}"
+            "${multi_opts}"
+            ${ARGN})
+
+    if(_ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${MODULE_ARG_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(NOT _ARG_NAME)
+        message(FATAL_ERROR "NAME not specified")
+    endif()
+
+    set_property(GLOBAL APPEND PROPERTY ROBOHIVE_ENABLED_MODULES ${_ARG_NAME})
+    remove_duplicates_in_global_list(ROBOHIVE_ENABLED_MODULES)
+endfunction()
 
 function(remove_duplicates_in_global_list _list)
     get_property(_list_content GLOBAL PROPERTY ${_list})
