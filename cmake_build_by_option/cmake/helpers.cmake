@@ -39,7 +39,7 @@ function(find_robohive_module_declarations _result)
 endfunction()
 
 #=======================================================================================================================
-# Recurse through source tree and gather information about declared robohive modules
+# Recurse through source tree and prepare robohive modules to build
 function(enumerate_robohive_modules)
     set(flags "")
     set(single_opts ROOT_PATH)
@@ -91,7 +91,7 @@ function(enumerate_robohive_modules)
 endfunction()
 
 #=======================================================================================================================
-# declare global list of declared modules
+# global list of declared modules
 define_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES INHERITED
         BRIEF_DOCS "All the declared robohive modules in the system"
         FULL_DOCS "All the declared robohive modules in the system")
@@ -99,6 +99,7 @@ set_property(GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES "")
 
 #=======================================================================================================================
 # macro to declare a module
+# NOTE: Has to be a macro (not function) because it must be run in the context of whoever is calling it.
 macro(robohive_module)
     set(flags "")
     set(single_opts NAME)
@@ -136,10 +137,14 @@ macro(robohive_module)
         # NOTE: Don't process the rest of the file in which this macro was called
         return()
     endif()
+
+    # NOTE: Do things you might want to do after enumeration is done
+    # TODO
+
 endmacro()
 
 #=======================================================================================================================
-# declare global list of modules marked for build
+# global list of modules marked for build
 define_property(GLOBAL PROPERTY ROBOHIVE_ENABLED_MODULES INHERITED
         BRIEF_DOCS "Robohive modules marked for build either directly or to satisfy dependencies"
         FULL_DOCS "Robohive modules marked for build either directly or to satisfy dependencies")
@@ -153,9 +158,9 @@ function(mark_modules_for_build)
     get_property(_declared_modules GLOBAL PROPERTY ROBOHIVE_DECLARED_MODULES)
     foreach(_m IN LISTS _declared_modules)
         if(${BUILD_ROBOHIVE_MODULE_${_m}})
-            mark_single_module_for_build(NAME ${_m})
+            mark_single_module_for_build(${_m})
             foreach(_dep IN LISTS ROBOHIVE_MODULE_${_m}_DEPENDS_ON)
-                mark_single_module_for_build(NAME ${_dep})
+                mark_single_module_for_build(${_dep})
             endforeach()
         endif()
     endforeach()
@@ -169,7 +174,7 @@ function(mark_modules_for_build)
         list(LENGTH _enabled_modules _num_items)
         foreach(_m IN LISTS _enabled_modules)
             foreach(_dep IN LISTS ROBOHIVE_MODULE_${_m}_DEPENDS_ON)
-                mark_single_module_for_build(NAME ${_dep})
+                mark_single_module_for_build(${_dep})
             endforeach()
         endforeach()
     endwhile()
@@ -177,30 +182,12 @@ endfunction()
 
 #=======================================================================================================================
 # Mark a single module for build
-function(mark_single_module_for_build)
-    set(flags "")
-    set(single_opts NAME)
-    set(multi_opts "")
-
-    include(CMakeParseArguments)
-    cmake_parse_arguments(_ARG
-            "${flags}"
-            "${single_opts}"
-            "${multi_opts}"
-            ${ARGN})
-
-    if(_ARG_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unparsed arguments: ${MODULE_ARG_UNPARSED_ARGUMENTS}")
-    endif()
-
-    if(NOT _ARG_NAME)
-        message(FATAL_ERROR "NAME not specified")
-    endif()
-
-    set_property(GLOBAL APPEND PROPERTY ROBOHIVE_ENABLED_MODULES ${_ARG_NAME})
+function(mark_single_module_for_build _name)
+    set_property(GLOBAL APPEND PROPERTY ROBOHIVE_ENABLED_MODULES ${_name})
     remove_duplicates_in_global_list(ROBOHIVE_ENABLED_MODULES)
 endfunction()
 
+#=======================================================================================================================
 function(remove_duplicates_in_global_list _list)
     get_property(_list_content GLOBAL PROPERTY ${_list})
     list(REMOVE_DUPLICATES _list_content)
@@ -208,6 +195,7 @@ function(remove_duplicates_in_global_list _list)
 endfunction()
 
 
+#=======================================================================================================================
 # Get a list of variables with specified prefix
 function (get_list_of_variables_starting_with _prefix _varResult)
     get_cmake_property(_vars VARIABLES)
@@ -215,6 +203,8 @@ function (get_list_of_variables_starting_with _prefix _varResult)
     set (${_varResult} ${_matchedVars} PARENT_SCOPE)
 endfunction()
 
+#=======================================================================================================================
+# Print all variables generated during configuration
 macro(print_cmake_variables)
     get_cmake_property(_variableNames VARIABLES)
     list (SORT _variableNames)

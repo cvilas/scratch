@@ -5,8 +5,6 @@ include(cmake/helpers.cmake)
 
 enumerate_robohive_modules(ROOT_PATH ${CMAKE_SOURCE_DIR})
 
-
-
 #print_cmake_variables()
 
 
