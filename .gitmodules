@@ -1,6 +1,0 @@
-[submodule "rtps_multiparticipant_test/third_party/fastrtps"]
-	path = rtps_multiparticipant_test/third_party/fastrtps
-	url = https://github.com/eProsima/Fast-RTPS.git
-[submodule "rtps_keys_exp/third_party/Fast-RTPS"]
-	path = rtps_keys_exp/third_party/fastrtps
-	url = https://github.com/eProsima/Fast-RTPS
