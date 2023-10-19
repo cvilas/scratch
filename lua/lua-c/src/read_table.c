@@ -1,10 +1,18 @@
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include <lua5.4/lua.h>
+#include <lua5.4/lauxlib.h>
+#include <lua5.4/lualib.h>
 #include <string.h>
 
 // Function to get a reference to a specific named table
 static int getTableReference(lua_State *L, const char *tableName) {
+
+    // If tableName is an empty string, return a reference to the global table
+    if (tableName[0] == '\0') {
+        lua_pushglobaltable(L);
+        int globalTableReference = luaL_ref(L, LUA_REGISTRYINDEX);
+        return globalTableReference;
+    }
+
     // Push the global environment table onto the stack
     lua_getglobal(L, "_G");
 
@@ -12,6 +20,7 @@ static int getTableReference(lua_State *L, const char *tableName) {
     char* table_name = strdup(tableName);
     const char *token = strtok(table_name, ".");
     printf("token: %s\n", token);
+
     while (token != NULL) {
         lua_pushstring(L, token);
         lua_gettable(L, -2); // Get the field from the table on top of the stack
@@ -69,6 +78,7 @@ int main() {
     }
     
     // Example: Get a reference to a nested table
+    int ref0 = getTableReference(L, ""); // global table reference
     int ref1 = getTableReference(L, "config_table.nested_table");
     int ref2 = getTableReference(L, "config_table");
     int ref3 = getTableReference(L, "personnel_records");
@@ -84,6 +94,11 @@ int main() {
     if (ref3 != 0) {
         printTable(L, ref3);
         luaL_unref(L, LUA_REGISTRYINDEX, ref3); 
+    }
+
+    if(ref0 != 0) {
+       printTable(L, ref0);
+       luaL_unref(L, LUA_REGISTRYINDEX, ref0); 
     }
 
     lua_close(L);

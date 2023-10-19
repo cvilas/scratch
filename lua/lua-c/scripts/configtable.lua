@@ -1,4 +1,7 @@
 local base_dim = 600
+
+system_name = "Test System"
+
 config_table = {
   window_width = base_dim + 200,
   window_height = base_dim,
