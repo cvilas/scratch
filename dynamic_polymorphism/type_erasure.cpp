@@ -50,13 +50,9 @@ private:
   template <typename T> 
   struct Model : Concept {
     Model(T const &value) : object_(value) {}
-
     void do_translate(Vector3d const &v) const override { translate(object_, v); }
-
     void do_rotate(Quaternion const &q) const override { rotate(object_, q); }
-
     void do_draw() const override { draw(object_); }
-
     T object_;
   };
 
