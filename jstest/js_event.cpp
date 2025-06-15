@@ -1,6 +1,5 @@
 // g++ -std=c++23 js_event.cpp -o js_event
 
-
 //#pragma once
 
 #include <functional>
@@ -10,9 +9,8 @@
 #include <cstdint>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
+#include <sys/epoll.h>
 #include <system_error>
-#include <cerrno>
 
 class Joystick {
 public:
@@ -24,96 +22,119 @@ public:
         int32_t  value;
     };
 
-    // callback will be called for each event read from the device
-    explicit Joystick(std::function<void(const Event&)>&& callback)
-        : callback_(std::move(callback)), fd_(-1)
-    {}
+    enum class state {
+        SUCCESS,
+        DISCONNECTED,
+        TIMEOUT
+    };
 
-    // Opens the device at device_name, returns true on success
-    bool open(const std::filesystem::path& device_name) {
+    Joystick() : fd_(-1), epoll_fd_(-1) {}
+
+    ~Joystick() {
         close();
-        fd_ = ::open(device_name.c_str(), O_RDONLY | O_NONBLOCK);
-        return fd_ >= 0;
     }
 
-    // Returns the file descriptor for integration with select/poll/epoll
-    int get_fd() const { return fd_; }
+    // Opens the device at device_path, returns true on success
+    bool open(std::filesystem::path& device_path) {
+        close();
+        fd_ = ::open(device_path.c_str(), O_RDONLY | O_NONBLOCK);
+        if (fd_ < 0)
+            return false;
 
-    // Reads all available events and triggers the callback for each one.
-    // Should be called when fd is readable (e.g., after select/poll/epoll signals readiness)
-    void process() {
-        if (fd_ < 0) return;
-        struct input_event ev;
-        ssize_t rd;
-        while ((rd = ::read(fd_, &ev, sizeof(ev))) == sizeof(ev)) {
-            Event e{uint32_t(ev.time.tv_sec), uint32_t(ev.time.tv_usec), ev.type, ev.code, ev.value};
-            callback_(e);
+        epoll_fd_ = epoll_create1(0);
+        if (epoll_fd_ < 0) {
+            ::close(fd_);
+            fd_ = -1;
+            return false;
         }
-        // rd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK): no more data
-        // rd == 0: device closed
+
+        struct epoll_event ev;
+        // Monitor for input, hang-up, and error events
+        ev.events = EPOLLIN | EPOLLHUP | EPOLLERR;
+        ev.data.fd = fd_;
+        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd_, &ev) == -1) {
+            ::close(fd_);
+            ::close(epoll_fd_);
+            fd_ = -1;
+            epoll_fd_ = -1;
+            return false;
+        }
+        return true;
     }
 
-    // Returns true if device is open
-    bool is_open() const { return fd_ >= 0; }
+    // Waits for input events and invokes the callback for each event.
+    // Returns state::SUCCESS if events were processed,
+    // or state::DISCONNECTED if the device was disconnected or on error.
+state wait(std::function<void(const Event&)> callback, int timeout_ms = -1) {
+    if (fd_ < 0 || epoll_fd_ < 0) return state::DISCONNECTED;
 
+    struct epoll_event ev;
+    int nfds = epoll_wait(epoll_fd_, &ev, 1, timeout_ms);
+    //if (nfds == 0) {
+    //    return state::TIMEOUT;
+    //}
+    if (nfds < 0) {
+        return state::DISCONNECTED;
+    }
+    if (ev.data.fd == fd_) {
+        if (ev.events & (EPOLLHUP | EPOLLERR)) {
+            close();
+            return state::DISCONNECTED;
+        }
+        struct input_event iev;
+        ssize_t rd;
+        while ((rd = ::read(fd_, &iev, sizeof(iev))) == sizeof(iev)) {
+            Event e{uint32_t(iev.time.tv_sec), uint32_t(iev.time.tv_usec), iev.type, iev.code, iev.value};
+            callback(e);
+        }
+        if (rd == 0) {
+            close();
+            return state::DISCONNECTED;
+        }
+    }
+    return state::SUCCESS;
+}
     // Closes the device if open
     void close() {
         if (fd_ >= 0) {
             ::close(fd_);
             fd_ = -1;
         }
+        if (epoll_fd_ >= 0) {
+            ::close(epoll_fd_);
+            epoll_fd_ = -1;
+        }
     }
 
-    ~Joystick() { close(); }
-
-    // Non-copyable, movable
+    // Not copyable or movable
     Joystick(const Joystick&) = delete;
     Joystick& operator=(const Joystick&) = delete;
-    Joystick(Joystick&& other) noexcept
-        : callback_(std::move(other.callback_)), fd_(other.fd_)
-    {
-        other.fd_ = -1;
-    }
-    Joystick& operator=(Joystick&& other) noexcept {
-        if (this != &other) {
-            close();
-            callback_ = std::move(other.callback_);
-            fd_ = other.fd_;
-            other.fd_ = -1;
-        }
-        return *this;
-    }
 
 private:
-    std::function<void(const Event&)> callback_;
     int fd_;
+    int epoll_fd_;
 };
 
 //#include "joystick.hpp"
-#include <atomic>
-#include <sys/select.h>
-#include <unistd.h>
 #include <iostream>
+#include <atomic>
 
 std::atomic_flag exit_flag;
 
 int main() {
-    Joystick js([](const Joystick::Event& ev) {
-        std::cout << "type=" << ev.type << " code=" << ev.code << " value=" << ev.value << '\n';
-    });
-    if (!js.open("/dev/input/by-path/pci-0000:00:14.0-usbv2-0:5:1.0-event-joystick")) {
+    Joystick js;
+    std::filesystem::path dev = "/dev/input/by-path/pci-0000:00:14.0-usbv2-0:5:1.0-event-joystick";
+    if (!js.open(dev)) {
         std::cerr << "Failed to open joystick device\n";
         return -1;
     }
-    int fd = js.get_fd();
-
     while (!exit_flag.test()) {
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(fd, &fds);
-        int ret = select(fd + 1, &fds, nullptr, nullptr, nullptr);
-        if (ret > 0 && FD_ISSET(fd, &fds)) {
-            js.process();
+        auto result = js.wait([](const Joystick::Event& ev) {
+            std::cout << "type=" << ev.type << " code=" << ev.code << " value=" << ev.value << '\n';
+        }, -1);
+        if (result == Joystick::state::DISCONNECTED) {
+            std::cerr << "Joystick disconnected or error occurred\n";
+            break;
         }
     }
     return 0;
