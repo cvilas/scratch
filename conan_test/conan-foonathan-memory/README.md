@@ -1,3 +1,0 @@
-- To create package `conan create . foonathan_memory/0.6.2@vilas/stable`
-- Before uploading package, set user: `conan user -r conan-vilas-stable cvilas`
-- Upload package: `conan upload foonathan_memory/0.6.2@vilas/stable -r=conan-vilas-stable`
