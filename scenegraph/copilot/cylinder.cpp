@@ -1,7 +1,7 @@
 #include "cylinder.hpp"
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
+#include <GL/gl.h>
 
 // Cylinder rendering
 void Cylinder::draw(const glm::mat4& parentTransform) {

@@ -1,7 +1,7 @@
 #include "cone.hpp" 
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
+#include <GL/gl.h>
 
 // Simple cone rendering (using immediate mode for demonstration)
 void Cone::draw(const glm::mat4& parentTransform) {

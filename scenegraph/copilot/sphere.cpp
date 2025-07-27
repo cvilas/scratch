@@ -1,7 +1,7 @@
 #include "sphere.hpp"
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
+#include <GL/gl.h>
 
 // Sphere rendering
 void Sphere::draw(const glm::mat4& parentTransform) {

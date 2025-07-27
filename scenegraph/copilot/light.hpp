@@ -1,7 +1,6 @@
 #pragma once
 #include "node.hpp"
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
 
 // Light node
 class Light : public Node {
@@ -20,7 +19,7 @@ public:
     Light(const std::string& name_);
     
     void setupSpotlight(const glm::vec3& position, const glm::vec3& direction);
-    void setupMovingSpotlight(const glm::vec3& position, const glm::vec3& direction, int lightIndex = GL_LIGHT1);
+    void setupMovingSpotlight(const glm::vec3& position, const glm::vec3& direction, int lightIndex);
     
     // Static method to set up global ambient lighting
     static void setupGlobalAmbient(float intensity = 0.4f);

@@ -1,6 +1,6 @@
 #include "cube.hpp"
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <GL/gl.h>
 
 // Cube rendering
 void Cube::draw(const glm::mat4& parentTransform) {

@@ -1,6 +1,6 @@
 #include "plane.hpp"
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <GL/gl.h>
 
 // Simple plane rendering for ground
 void Plane::draw(const glm::mat4& parentTransform) {

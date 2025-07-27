@@ -1,5 +1,5 @@
 #include "light.hpp"
-#include <GLFW/glfw3.h>
+#include <GL/gl.h>
 
 Light::Light(const std::string& name_) : Node(name_) {}
 
