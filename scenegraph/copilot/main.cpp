@@ -1,5 +1,8 @@
 #include "scenegraph.hpp"
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -9,39 +12,32 @@
 // Global camera pointer for mouse callbacks
 std::shared_ptr<Camera> g_camera;
 
+// Window and OpenGL context
+SDL_Window* window = nullptr;
+SDL_GLContext glContext;
+
 // Window dimensions
 int windowWidth = 800;
 int windowHeight = 600;
 
 // Mouse state
-bool firstMouse = true;
-float lastX = 400.0f;  // Half of window width
-float lastY = 300.0f;  // Half of window height
 bool mouseCaptured = true;  // Track if mouse is captured
 
-// Mouse callback function
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+// Handle mouse motion
+void handleMouseMotion(int xrel, int yrel) {
     if (!mouseCaptured) return;  // Don't process mouse if not captured
     
-    if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
+    // In SDL relative mode, we get relative movement directly
+    float xoffset = xrel;
+    float yoffset = -yrel;  // Reversed since y-coordinates go from bottom to top
 
     if (g_camera) {
         g_camera->processMouseMovement(xoffset, yoffset);
     }
 }
 
-// Scroll callback function
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+// Handle mouse wheel
+void handleMouseWheel(int yoffset) {
     if (!mouseCaptured) return;  // Don't process scroll if mouse not captured
     
     if (g_camera) {
@@ -49,29 +45,26 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
-// Key callback function for handling key presses
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (action == GLFW_PRESS) {
-        if (key == GLFW_KEY_ESCAPE) {
-            glfwSetWindowShouldClose(window, true);
-        }
-        else if (key == GLFW_KEY_TAB) {
-            // Toggle mouse capture
-            mouseCaptured = !mouseCaptured;
-            if (mouseCaptured) {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                firstMouse = true;  // Reset mouse state
-                std::cout << "Mouse captured - camera controls enabled\n";
-            } else {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                std::cout << "Mouse released - camera controls disabled\n";
-            }
+// Handle key presses
+void handleKeyPress(SDL_Keycode key) {
+    if (key == SDLK_ESCAPE) {
+        // Exit will be handled in main loop
+    }
+    else if (key == SDLK_TAB) {
+        // Toggle mouse capture
+        mouseCaptured = !mouseCaptured;
+        if (mouseCaptured) {
+            SDL_SetWindowRelativeMouseMode(window, true);
+            std::cout << "Mouse captured - camera controls enabled\n";
+        } else {
+            SDL_SetWindowRelativeMouseMode(window, false);
+            std::cout << "Mouse released - camera controls disabled\n";
         }
     }
 }
 
-// Window resize callback
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+// Handle window resize
+void handleWindowResize(int width, int height) {
     windowWidth = width;
     windowHeight = height;
     
@@ -87,10 +80,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glLoadMatrixf(glm::value_ptr(projection));
     
     glMatrixMode(GL_MODELVIEW);
-    
-    // Update mouse center position for capture
-    lastX = width / 2.0f;
-    lastY = height / 2.0f;
 }
 
 // Simple OpenGL setup for demonstration
@@ -177,30 +166,43 @@ void print_scene_hierarchy(std::shared_ptr<Node> node, int depth = 0) {
 
 // Example usage: Cone, Camera, Light
 int main() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to init GLFW\n";
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Failed to init SDL: " << SDL_GetError() << "\n";
         return -1;
     }
     
-    // Enable window resizing
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    // Set OpenGL attributes
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     
-    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "SceneGraph Demo - Mouse Controls", nullptr, nullptr);
+    // Create window
+    window = SDL_CreateWindow("SceneGraph Demo - SDL3 Version",
+                             windowWidth, windowHeight,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    
     if (!window) {
-        std::cerr << "Failed to create window\n";
-        glfwTerminate();
+        std::cerr << "Failed to create window: " << SDL_GetError() << "\n";
+        SDL_Quit();
         return -1;
     }
-    glfwMakeContextCurrent(window);
     
-    // Set up input callbacks
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // Create OpenGL context
+    glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        std::cerr << "Failed to create OpenGL context: " << SDL_GetError() << "\n";
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
     
-    // Tell GLFW to capture our mouse initially
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // Enable VSync
+    SDL_GL_SetSwapInterval(1);
+    
+    // Set initial mouse capture
+    SDL_SetWindowRelativeMouseMode(window, true);
 
     setupOpenGL();
 
@@ -386,7 +388,41 @@ int main() {
     const float lightSpeed = 1.5f;
 
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
+    bool running = true;
+    SDL_Event event;
+    
+    while (running) {
+        // Handle events
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_EVENT_QUIT:
+                    running = false;
+                    break;
+                    
+                case SDL_EVENT_KEY_DOWN:
+                    if (event.key.key == SDLK_ESCAPE) {
+                        running = false;
+                    } else {
+                        handleKeyPress(event.key.key);
+                    }
+                    break;
+                    
+                case SDL_EVENT_MOUSE_MOTION:
+                    if (mouseCaptured) {
+                        handleMouseMotion(event.motion.xrel, event.motion.yrel);
+                    }
+                    break;
+                    
+                case SDL_EVENT_MOUSE_WHEEL:
+                    handleMouseWheel(event.wheel.y);
+                    break;
+                    
+                case SDL_EVENT_WINDOW_RESIZED:
+                    handleWindowResize(event.window.data1, event.window.data2);
+                    break;
+            }
+        }
+        
         // Update time for animation
         time += 0.016f; // Approximately 60 FPS
         
@@ -412,11 +448,12 @@ int main() {
 
         scene->draw(glm::mat4(1.0f));
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        SDL_GL_SwapWindow(window);
     }
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    // Cleanup
+    SDL_GL_DestroyContext(glContext);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }

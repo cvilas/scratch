@@ -1,6 +1,6 @@
 #pragma once
 #include "node.hpp"
-#include <GLFW/glfw3.h>
+
 
 // Separator node - provides isolation and grouping
 // Saves and restores OpenGL state, useful for grouping objects

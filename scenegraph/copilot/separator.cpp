@@ -1,5 +1,6 @@
 #include "separator.hpp"
 #include <glm/gtc/type_ptr.hpp>
+#include <GL/gl.h>
 
 Separator::Separator(const std::string& name_) : Node(name_) {}
 
