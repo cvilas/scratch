@@ -7,7 +7,7 @@ find_package(SDL3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
-# Add executable
+# Add executables
 add_executable(scenegraph_demo 
     main.cpp 
     scenegraph.cpp
@@ -22,15 +22,31 @@ add_executable(scenegraph_demo
     separator.cpp
 )
 
+add_executable(modern_demo
+    modern_example.cpp
+    modern_scenegraph.cpp
+)
+
+add_executable(modern_sdl_demo
+    modern_sdl_demo.cpp
+    modern_scenegraph.cpp
+)
+
 # Link libraries
 target_link_libraries(scenegraph_demo 
     SDL3::SDL3
-    ${OPENGL_LIBRARIES}
+    OpenGL::OpenGL
+)
+
+target_link_libraries(modern_demo
+    OpenGL::OpenGL
     GL
     GLU
 )
 
-# Include directories
-target_include_directories(scenegraph_demo PRIVATE 
-    ${OPENGL_INCLUDE_DIRS}
+target_link_libraries(modern_sdl_demo
+    SDL3::SDL3
+    OpenGL::OpenGL
+    GL
+    GLU
 )
