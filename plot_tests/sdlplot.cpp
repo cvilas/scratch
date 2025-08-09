@@ -1,6 +1,6 @@
-//g++ -o sdlplot sdlplot.cpp -lSDL2
+//g++ -o sdlplot sdlplot.cpp -lSDL3
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -75,12 +75,12 @@ void draw_grid(PlotContext* ctx) {
 
     // Vertical grid lines
     for (int x = ctx->plot_x; x <= ctx->plot_x + ctx->plot_width; x += GRID_SPACING) {
-        SDL_RenderDrawLine(ctx->renderer, x, ctx->plot_y, x, ctx->plot_y + ctx->plot_height);
+        SDL_RenderLine(ctx->renderer, x, ctx->plot_y, x, ctx->plot_y + ctx->plot_height);
     }
 
     // Horizontal grid lines
     for (int y = ctx->plot_y; y <= ctx->plot_y + ctx->plot_height; y += GRID_SPACING) {
-        SDL_RenderDrawLine(ctx->renderer, ctx->plot_x, y, ctx->plot_x + ctx->plot_width, y);
+        SDL_RenderLine(ctx->renderer, ctx->plot_x, y, ctx->plot_x + ctx->plot_width, y);
     }
 }
 
@@ -89,11 +89,11 @@ void draw_axes(PlotContext* ctx) {
     SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255);
 
     // Y-axis
-    SDL_RenderDrawLine(ctx->renderer, ctx->plot_x, ctx->plot_y,
+    SDL_RenderLine(ctx->renderer, ctx->plot_x, ctx->plot_y,
                        ctx->plot_x, ctx->plot_y + ctx->plot_height);
 
     // X-axis
-    SDL_RenderDrawLine(ctx->renderer, ctx->plot_x, ctx->plot_y + ctx->plot_height,
+    SDL_RenderLine(ctx->renderer, ctx->plot_x, ctx->plot_y + ctx->plot_height,
                        ctx->plot_x + ctx->plot_width, ctx->plot_y + ctx->plot_height);
 }
 
@@ -122,7 +122,7 @@ void draw_timeseries(PlotContext* ctx) {
         data_to_screen(ctx, i, get_value(&ctx->series, i), &x1, &y1);
         data_to_screen(ctx, i + 1, get_value(&ctx->series, i + 1), &x2, &y2);
 
-        SDL_RenderDrawLine(ctx->renderer, x1, y1, x2, y2);
+        SDL_RenderLine(ctx->renderer, x1, y1, x2, y2);
     }
 
     // Draw current point as a circle
@@ -135,7 +135,7 @@ void draw_timeseries(PlotContext* ctx) {
         for (int i = -2; i <= 2; i++) {
             for (int j = -2; j <= 2; j++) {
                 if (i*i + j*j <= 4) {
-                    SDL_RenderDrawPoint(ctx->renderer, x + i, y + j);
+                    SDL_RenderPoint(ctx->renderer, x + i, y + j);
                 }
             }
         }
@@ -158,8 +158,7 @@ int main(int argc, char* argv[]) {
     PlotContext ctx = {0};
 
     ctx.window = SDL_CreateWindow("Real-time Time Series Plot",
-                                  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                  WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+                                  WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 
     if (!ctx.window) {
         printf("Window creation failed: %s\n", SDL_GetError());
@@ -167,7 +166,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    ctx.renderer = SDL_CreateRenderer(ctx.window, -1, SDL_RENDERER_ACCELERATED);
+    ctx.renderer = SDL_CreateRenderer(ctx.window, NULL);
     if (!ctx.renderer) {
         printf("Renderer creation failed: %s\n", SDL_GetError());
         SDL_DestroyWindow(ctx.window);
@@ -189,7 +188,7 @@ int main(int argc, char* argv[]) {
 
     while (running) {
         while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
+            if (e.type == SDL_EVENT_QUIT) {
                 running = 0;
             }
         }
