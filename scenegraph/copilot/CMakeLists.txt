@@ -3,6 +3,8 @@ project(scenegraph_demo)
 
 set(CMAKE_CXX_STANDARD 23)
 
+set(OpenGL_GL_PREFERENCE GLVND)
+
 find_package(SDL3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
