@@ -4,6 +4,13 @@
 
 // A function that triggers on rising and falling edge rather than state. Useful in logging state changes within loops
 inline constexpr void on_edge(bool state, const std::invocable<> auto& on_rising, const std::invocable<> auto& on_falling) {
+    // Although not necessary here because this is a template function and every instance is therefore unique, the following
+    // is an example of IIFE(immediately invoked function expression)
+    //
+    // Why use an IIFE?
+    // - To create a block of code with its own scope.
+    // - useful for creating per-call-site static variables (enabling functions like LOG_ONCE or this once which triggers on edge rather than level)
+    // - Helps avoid polluting the outer scope with temporary variables.
     [&]{
         static bool prev_state = state;
         if (!prev_state && state) {
