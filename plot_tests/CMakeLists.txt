@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(OpenGL REQUIRED)
-find_package(Qt5 COMPONENTS Core Widgets OpenGL PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets OpenGL PrintSupport REQUIRED)
 find_package(Qwt REQUIRED)
 find_package(SDL3 REQUIRED)
 
@@ -30,6 +30,6 @@ add_executable(qwt_example
 
 add_executable(sdlplot sdlplot.cpp)
 
-target_link_libraries(qcp_example Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport OpenGL::GL)
-target_link_libraries(qwt_example ${QWT_LIBRARY} Qt5::Widgets Qt5::OpenGL)
+target_link_libraries(qcp_example Qt6::Widgets Qt6::OpenGL Qt6::PrintSupport OpenGL::GL)
+target_link_libraries(qwt_example ${QWT_LIBRARY} Qt6::Widgets Qt6::OpenGL)
 target_link_libraries(sdlplot SDL3::SDL3)
