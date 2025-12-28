@@ -1,9 +1,10 @@
-// Nices explanation of Type Erasure design pattern as explained by Klaus Iglberger
+// Nice explanation of Type Erasure design by Klaus Iglberger
 // From https://youtu.be/m3UmABVf55g
 //
 // See also https://www.modernescpp.com/index.php/type-erasure/
 //
-// Type erasure is a type-safe generic way to provide one interface for different types, without the need for a common base class.
+// Type erasure is a type-safe generic way to provide one interface for different types, without 
+// the need for a common base class.
 
 #include <memory>
 #include <vector>
