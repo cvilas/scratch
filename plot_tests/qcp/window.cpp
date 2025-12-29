@@ -41,6 +41,7 @@
 
 #include "window.h"
 #include "qcustomplot.h"
+#include <QRandomGenerator>
 
 Window::Window(QWidget *parent) : QMainWindow(parent)
 {
@@ -81,16 +82,16 @@ void Window::setup()
 
 void Window::update()
 {
-  static QTime time(QTime::currentTime());
+  static QElapsedTimer time = []{ QElapsedTimer t; t.start(); return t; }();
 
   double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
   static double lastPointKey = 0;
   if (key-lastPointKey > 0.002) // at most add point every 2 ms
   {
     // add data to lines:
-    plot->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
-    plot->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*0.5*qSin(key/0.4364));
-    plot->graph(2)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*0.5*qCos(key/0.4364));
+    plot->graph(0)->addData(key, qSin(key)+QRandomGenerator::global()->generateDouble()*1*qSin(key/0.3843));
+    plot->graph(1)->addData(key, qCos(key)+QRandomGenerator::global()->generateDouble()*0.5*qSin(key/0.4364));
+    plot->graph(2)->addData(key, qSin(key)+QRandomGenerator::global()->generateDouble()*0.5*qCos(key/0.4364));
 
     lastPointKey = key;
 

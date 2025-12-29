@@ -21,7 +21,6 @@ public Q_SLOTS:
 private Q_SLOTS:
     void onTimer();
 private:
-    QVector<QPointF> points_;
     QLineSeries* line_series_;
     QTimer timer_;
 };

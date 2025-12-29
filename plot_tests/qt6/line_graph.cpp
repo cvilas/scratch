@@ -41,8 +41,6 @@ void LineGraph::onTimer() {
     static double t = 0;
     t += TIMEOUT.count();
     const auto pt = QPointF(t, 10*sin(2* std::numbers::pi * t /1000));
-    //points_.append(pt);
     line_series_->append(pt);
-    //line_series_->replace(points_);
-    //emit lineSeriesChanged();
+    emit lineSeriesChanged();
 }
