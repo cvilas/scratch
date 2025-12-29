@@ -44,6 +44,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QElapsedTimer>
 
 class QCustomPlot;
 

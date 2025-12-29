@@ -10,12 +10,15 @@ Widget::Widget(QWidget *parent) : QWidget(parent) {
     layout_ = new QGridLayout(widget_);
     layout_->addWidget(quick_widget_);
 
-    QString extraImportPath(QStringLiteral("%1/../../../%2"));
-    quick_widget_->engine()->addImportPath(extraImportPath.arg(QGuiApplication::applicationDirPath(), QString::fromLatin1("qml")));
-    QQmlContext *context = quick_widget_->engine()->rootContext();
-    context->setContextProperty("lineGraph", line_graph_);
-    quick_widget_->setSource(QUrl("qrc:/qml/graph/main.qml"));
-    quick_widget_->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    quick_widget_->rootContext()->setContextProperty("lineGraph", line_graph_);
+    quick_widget_->rootContext()->setContextProperty("lineSeries", line_graph_->lineSeries());
+    quick_widget_->setSource(QUrl("qrc:/main.qml"));
+   if (quick_widget_->status() == QQuickWidget::Error) {
+        qWarning() << "QML Errors:";
+        for (const auto &error : quick_widget_->errors()) {
+            qWarning() << error. toString();
+        }
+    }
 }
 
 Widget::~Widget() {

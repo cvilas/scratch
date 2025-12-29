@@ -1,52 +1,16 @@
 #include "window.h"
-// #include "adcreader.h"
 
 #include <cmath>  // for sine stuff
+#include <QRandomGenerator>
 #include <QStatusBar>
 #include <qwt/qwt_scale_widget.h>
 #include <qwt/qwt_plot_grid.h>
-#include <qwt/qwt_plot_glcanvas.h>
-#include <qwt/qwt_plot_canvas.h>
 #include <qwt/qwt_plot.h>
 #include <qwt/qwt_plot_curve.h>
-
-#if QCUSTOMPLOT_USE_OPENGL
-class GLCanvas: public QwtPlotGLCanvas
-{
-public:
-    GLCanvas( QwtPlot *parent = NULL ): QwtPlotGLCanvas( parent )
-    {
-      setContentsMargins( 1, 1, 1, 1 );
-    }
-
-protected:
-    virtual void paintEvent( QPaintEvent *event )
-    {
-        QPainter painter( this );
-        //painter.setClipRegion( event->region() );
-
-        QwtPlot *plot = qobject_cast< QwtPlot *>( parent() );
-        if ( plot )
-            plot->drawCanvas( &painter );
-
-        painter.setPen( palette().windowText().color() );
-        painter.drawRect( rect().adjusted( 1, 1, 0, 0 ) );
-    }
-};
-#endif
 
 Window::Window(QWidget* parent) : QMainWindow(parent)
 {
   plot = new QwtPlot;
-
-#if QCUSTOMPLOT_USE_OPENGL
-  // use opengl canvas
-  QwtPlotGLCanvas *plotCanvas = qobject_cast<QwtPlotGLCanvas *>( plot->canvas() );
-  plotCanvas = new GLCanvas();
-  plotCanvas->setPalette( QColor( "white" ) );
-  plot->setCanvas( plotCanvas );
-#endif
-
   setCentralWidget(plot);
   setup();
 }
@@ -92,9 +56,9 @@ void Window::update()
   if (key-lastPointKey > 0.002) // at most add point every 2 ms
   {
     xData.append(key);
-    yData.append(qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
-    yData2.append(qCos(key)+qrand()/(double)RAND_MAX*0.5*qSin(key/0.4364));
-    yData3.append(qSin(key)+qrand()/(double)RAND_MAX*0.5*qCos(key/0.4364));
+    yData.append(qSin(key)+QRandomGenerator::global()->generateDouble()*1*qSin(key/0.3843));
+    yData2.append(qCos(key)+QRandomGenerator::global()->generateDouble()*0.5*qSin(key/0.4364));
+    yData3.append(qSin(key)+QRandomGenerator::global()->generateDouble()*0.5*qCos(key/0.4364));
 
     curve->setSamples(xData, yData);
     curve2->setSamples(xData, yData2);
