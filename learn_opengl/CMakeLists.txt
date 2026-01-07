@@ -95,3 +95,7 @@ target_link_libraries(${PROJECT_NAME}_hello_coord_systems PRIVATE ${PROJECT_NAME
 add_executable(${PROJECT_NAME}_hello_camera src/08_hello_camera.cpp)
 add_clang_format(${PROJECT_NAME}_hello_camera)
 target_link_libraries(${PROJECT_NAME}_hello_camera PRIVATE ${PROJECT_NAME}_lib glfw)
+
+add_executable(${PROJECT_NAME}_hello_lights src/09_hello_lights.cpp)
+add_clang_format(${PROJECT_NAME}_hello_lights)
+target_link_libraries(${PROJECT_NAME}_hello_lights PRIVATE ${PROJECT_NAME}_lib glfw)

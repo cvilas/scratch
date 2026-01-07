@@ -67,25 +67,54 @@ auto ShaderCompiler::id() const -> unsigned int {
 }
 
 void ShaderCompiler::set(const std::string& name, bool value) const {
-  const auto var = glGetUniformLocation(id_, name.c_str());
-  if (var == -1) {
-    throw std::runtime_error(std::format("Uniform variable '{}' not found", name));
-  }
+  const auto var = check(name);
   glUniform1i(var, value ? 1 : 0);
 }
 
 void ShaderCompiler::set(const std::string& name, int value) const {
-  const auto var = glGetUniformLocation(id_, name.c_str());
-  if (var == -1) {
-    throw std::runtime_error(std::format("Uniform variable '{}' not found", name));
-  }
+  const auto var = check(name);
   glUniform1i(var, value);
 }
 
 void ShaderCompiler::set(const std::string& name, float value) const {
+  const auto var = check(name);
+  glUniform1f(var, value);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::vec2& value) const {
+  const auto var = check(name);
+  glUniform2fv(var, 1, &value[0]);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::vec3& value) const {
+  const auto var = check(name);
+  glUniform3fv(var, 1, &value[0]);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::vec4& value) const {
+  const auto var = check(name);
+  glUniform4fv(var, 1, &value[0]);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::mat2& value) const {
+  const auto var = check(name);
+  glUniformMatrix2fv(var, 1, GL_FALSE, &value[0][0]);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::mat3& value) const {
+  const auto var = check(name);
+  glUniformMatrix3fv(var, 1, GL_FALSE, &value[0][0]);
+}
+
+void ShaderCompiler::set(const std::string& name, const glm::mat4& value) const {
+  const auto var = check(name);
+  glUniformMatrix4fv(var, 1, GL_FALSE, &value[0][0]);
+}
+
+auto ShaderCompiler::check(const std::string& name) const -> int {
   const auto var = glGetUniformLocation(id_, name.c_str());
   if (var == -1) {
     throw std::runtime_error(std::format("Uniform variable '{}' not found", name));
   }
-  glUniform1f(var, value);
+  return var;
 }
