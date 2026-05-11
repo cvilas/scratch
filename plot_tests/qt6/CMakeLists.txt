@@ -1,0 +1,19 @@
+add_executable(qt6plot
+    main.cpp
+    main.qrc
+    main.qml
+    widget.h 
+    widget.cpp
+    line_graph.h 
+    line_graph.cpp
+)
+
+target_link_libraries(qt6plot
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::QuickWidgets
+        Qt6::Graphs
+)
