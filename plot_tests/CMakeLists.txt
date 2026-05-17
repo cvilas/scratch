@@ -15,6 +15,7 @@ find_package(OpenGL REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Quick QuickWidgets Qml Graphs OpenGL PrintSupport REQUIRED)
 
 add_subdirectory(glfw)
+add_subdirectory(plotlib)
 add_subdirectory(qcp)
 add_subdirectory(qt6)
 add_subdirectory(qwt)
